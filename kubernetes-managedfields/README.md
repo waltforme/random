@@ -20,8 +20,6 @@ Date:   Mon Sep 30 17:00:07 2024 +0100
     kubelet: don't use cadvisor stats if PodAndContainerStatsFromCRI feature is enabled
 ```
 
-`kc` is just an alias for `kubectl` in the following commands.
-
 ### HTTP PATCH
 Experiment shows that an HTTP PATCH doesn't change the owner of a field by setting the same value.
 
