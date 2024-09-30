@@ -27,3 +27,7 @@ Experiment shows that an HTTP PATCH doesn't change the owner of a field by setti
 
 Steps are detailed [here](./HTTP-PATCH.md).
 
+### HTTP PUT
+Experiment shows that an HTTP PUT doesn't change the owner of a field by setting the same value.
+
+Steps are detailed [here](./HTTP-PUT.md).
