@@ -31,4 +31,4 @@ Experiment shows that an HTTP PUT doesn't change the owner of a field by setting
 Steps are detailed [here](./HTTP-PUT.md).
 
 ### Tests (coming soon)
-I found it interesting to write some more tests against the kube-apiserver. More to be shared here very soon.
+I found it interesting to write some more unit tests. More to be shared here very soon.

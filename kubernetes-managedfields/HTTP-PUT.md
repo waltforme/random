@@ -121,6 +121,15 @@ deployment.apps/nginx-0930 replaced
 ```
 We can see an HTTP PUT is sent to apiserver.
 
+Note that the only difference between `nginx-0930.yaml` and `nginx-0930-stable.yaml` is the image tag.
+```console
+diff nginx-0930.yaml nginx-0930-stable.yaml
+27c27
+<       - image: nginx:mainline
+---
+>       - image: nginx:stable
+```
+
 Check the managedFields. The object has two owners, `kubectl-create` and `kubectl-replace`.
 ```console
 kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.managedFields
