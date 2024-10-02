@@ -99,7 +99,7 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
   operation: Apply
   time: "2024-10-01T21:53:28Z"
 ```
-The object has a single manager which is `jun`.
+The fields have a single manager which is `jun`.
 
 `kubectl apply --server-side` using the same `nginx-0930.yaml`, but as a second manager `jun-apply-again`.
 ```console
@@ -245,6 +245,7 @@ Comparing the two managers, we can tell their managed fields are identical --- a
 The second manager somehow doesn't show `time`. Is it a bug? Will dig into it later.
 
 The only difference between `nginx-0930.yaml` and `nginx-0930-stable.yaml` is the image tag.
+We are going to use `nginx-0930-stable.yaml` in the next step.
 ```console
 diff nginx-0930.yaml nginx-0930-stable.yaml
 27c27
