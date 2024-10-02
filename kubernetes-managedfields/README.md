@@ -6,7 +6,8 @@ These little experiments try to answer a question regarding Kubernetes objects' 
 
 The original question was asked [here](https://kubernetes.slack.com/archives/C0EG7JC6T/p1726079535895249) in [sig-api-machinery Slack channel](https://kubernetes.slack.com/messages/sig-api-machinery). 
 
-Kubernetes [docs](https://kubernetes.io/docs/reference/using-api/server-side-apply/#apply-and-update) says that two operations, apply (HTTP PATCH) and update (HTTP PUT) "update `.metadata.managedFields`, but behave a little differently". These experiments try to answer the question for both operations.
+Kubernetes [docs](https://kubernetes.io/docs/reference/using-api/server-side-apply/#apply-and-update) says
+(a) there are two operations in scope, `Apply` (HTTP PATCH) and `Update` (HTTP PUT), and (b) "Both operations update `.metadata.managedFields`, but behave a little differently". These experiments try to answer the question for both operations.
 
 Experiments are performed on commit [7ee17ce9b7c2a22e63e2bbd79d48d3fe349a9386](https://github.com/kubernetes/kubernetes/tree/7ee17ce9b7c2a22e63e2bbd79d48d3fe349a9386) of k/k.
 ```
@@ -28,7 +29,7 @@ Details are documented [here](./apply_HTTP-PATCH.md).
 ### Update (HTTP PUT)
 Experiment shows that this operation doesn't change the owner of a field by setting the same value.
 
-Steps are detailed [here](./update_HTTP-PUT.md).
+Details are documented [here](./update_HTTP-PUT.md).
 
 ### Tests (coming soon)
 I found it interesting to write some more unit tests. More to be shared here very soon.
