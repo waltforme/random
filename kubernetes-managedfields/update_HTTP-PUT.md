@@ -99,7 +99,7 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
   operation: Apply
   time: "2024-10-02T17:07:58Z"
 ```
-The fields have a single manager which is `jun`.
+The fields have a single manager which is `jun` (operation: Apply).
 
 The only difference between `nginx-0930.yaml` and `nginx-0930-stable.yaml` is the image tag.
 We are going to use `nginx-0930-stable.yaml` in the next step.
@@ -236,7 +236,7 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
   operation: Update
   time: "2024-10-02T17:13:52Z"
 ```
-The fields have two managers, `jun` and `kubectl-replace`.
+The fields have two managers, `jun` (operation: Apply) and `kubectl-replace` (operation: Update).
 We can see the manager `kubectl-replace` exclusively owns the 'image' field (ownership taken from `jun`), but doesn't own any other fields.
 
 Delete the object.
@@ -348,7 +348,7 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
   operation: Update
   time: "2024-10-02T17:19:44Z"
 ```
-The fields have a single manager which is `kubectl-create`.
+The fields have a single manager which is `kubectl-create` (operation: Update).
 
 `kubectl replace` the object using `nginx-0930-stable.yaml`, to change the image tag from `mainline` to `stable`.
 ```console
@@ -477,7 +477,7 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
   operation: Update
   time: "2024-10-02T17:25:00Z"
 ```
-The fields have two managers, `kubectl-create` and `kubectl-replace`.
+The fields have two managers, `kubectl-create` (operation: Update) and `kubectl-replace` (operation: Update).
 We can see the manager `kubectl-replace` exclusively owns the 'image' field (ownership taken from `kubecctl-create`), but doesn't own any other fields.
 
 Delete the object.

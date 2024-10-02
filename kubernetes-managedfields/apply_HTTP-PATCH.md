@@ -99,7 +99,7 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
   operation: Apply
   time: "2024-10-01T21:53:28Z"
 ```
-The fields have a single manager which is `jun`.
+The fields have a single manager which is `jun` (operation: Apply).
 
 `kubectl apply --server-side` using the same `nginx-0930.yaml`, but as a second manager `jun-apply-again`.
 ```console
@@ -240,7 +240,7 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
   operation: Apply
   time: "2024-10-01T21:53:28Z"
 ```
-The fields have two managers, `jun` and `jun-apply-again`.
+The fields have two managers, `jun` (operation: Apply) and `jun-apply-again` (operation: Apply).
 Comparing the two managers, we can tell their managed fields are identical --- all the fields of the object.
 The second manager somehow doesn't show `time`. Is it a bug? Will dig into it later.
 
@@ -501,6 +501,7 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
   operation: Apply
   time: "2024-10-02T02:45:59Z"
 ```
+The fields have three managers, `jun` (operation: Apply), `jun-apply-again` (operation: Apply), and `jun-apply-3rd` (operation: Apply).
 `jun-apply-3rd` manages all the fields as promised. `jun` and `jun-apply-again` lose the ownership of the conflicting 'image' field.
 
 Delete the object.
