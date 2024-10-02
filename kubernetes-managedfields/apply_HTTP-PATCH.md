@@ -501,3 +501,9 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
   time: "2024-10-02T02:45:59Z"
 ```
 `jun-apply-3rd` manages all the fields as promised. `jun` and `jun-apply-again` lose the ownership of the conflicting 'image' field.
+
+Delete the object.
+```console
+kubectl delete -f nginx-0930.yaml
+deployment.apps "nginx-0930" deleted
+```
