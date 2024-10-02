@@ -23,12 +23,12 @@ Date:   Mon Sep 30 17:00:07 2024 +0100
 ### Apply (HTTP PATCH)
 Experiment shows that this operation results in co-ownership of a field by setting the same value.
 
-Details are documented [here](./HTTP-PATCH.md).
+Details are documented [here](./apply_HTTP-PATCH.md).
 
 ### Update (HTTP PUT)
 Experiment shows that this operation doesn't change the owner of a field by setting the same value.
 
-Steps are detailed [here](./HTTP-PUT.md).
+Steps are detailed [here](./update_HTTP-PUT.md).
 
 ### Tests (coming soon)
 I found it interesting to write some more unit tests. More to be shared here very soon.
