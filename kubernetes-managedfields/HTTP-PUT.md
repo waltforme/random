@@ -121,7 +121,7 @@ deployment.apps/nginx-0930 replaced
 ```
 We can see an HTTP PUT is sent to apiserver.
 
-Note that the only difference between `nginx-0930.yaml` and `nginx-0930-stable.yaml` is the image tag.
+The only difference between `nginx-0930.yaml` and `nginx-0930-stable.yaml` is the image tag.
 ```console
 diff nginx-0930.yaml nginx-0930-stable.yaml
 27c27

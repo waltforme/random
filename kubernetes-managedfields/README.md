@@ -20,13 +20,13 @@ Date:   Mon Sep 30 17:00:07 2024 +0100
     kubelet: don't use cadvisor stats if PodAndContainerStatsFromCRI feature is enabled
 ```
 
-### HTTP PATCH
-Experiment shows that an HTTP PATCH doesn't change the owner of a field by setting the same value.
+### Apply (HTTP PATCH)
+Experiment shows that this operation results in co-ownership of a field by setting the same value.
 
-Steps are detailed [here](./HTTP-PATCH.md).
+Details are documented [here](./HTTP-PATCH.md).
 
-### HTTP PUT
-Experiment shows that an HTTP PUT doesn't change the owner of a field by setting the same value.
+### Update (HTTP PUT)
+Experiment shows that this operation doesn't change the owner of a field by setting the same value.
 
 Steps are detailed [here](./HTTP-PUT.md).
 
