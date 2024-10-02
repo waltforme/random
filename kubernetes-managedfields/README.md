@@ -6,7 +6,7 @@ These little experiments try to answer a question regarding Kubernetes objects' 
 
 The original question was asked [here](https://kubernetes.slack.com/archives/C0EG7JC6T/p1726079535895249) in [sig-api-machinery Slack channel](https://kubernetes.slack.com/messages/sig-api-machinery). 
 
-Kubernetes [docs](https://kubernetes.io/docs/reference/using-api/server-side-apply/#apply-and-update) says that two operations (HTTP PATCH and HTTP PUT) "update `.metadata.managedFields`, but behave a little differently". These experiments try to answer the question for both operations.
+Kubernetes [docs](https://kubernetes.io/docs/reference/using-api/server-side-apply/#apply-and-update) says that two operations, apply (HTTP PATCH) and update (HTTP PUT) "update `.metadata.managedFields`, but behave a little differently". These experiments try to answer the question for both operations.
 
 Experiments are performed on commit [7ee17ce9b7c2a22e63e2bbd79d48d3fe349a9386](https://github.com/kubernetes/kubernetes/tree/7ee17ce9b7c2a22e63e2bbd79d48d3fe349a9386) of k/k.
 ```
