@@ -54,6 +54,7 @@ I1001 21:53:28.540721 2259008 request.go:1171] Response Body: {"kind":"Deploymen
 deployment.apps/nginx-0930 serverside-applied
 I1001 21:53:28.541015 2259008 apply.go:476] Running apply post-processor function
 ```
+We can see an HTTP PATCH is sent to the apiserver.
 
 Check the managedFields.
 ```console
@@ -156,7 +157,7 @@ I1002 01:55:32.043921 2333767 request.go:1171] Response Body: {"kind":"Deploymen
 deployment.apps/nginx-0930 serverside-applied
 I1002 01:55:32.044304 2333767 apply.go:476] Running apply post-processor function
 ```
-We can see an HTTP PATCH is sent to apiserver.
+We can see an HTTP PATCH is sent to the apiserver.
 
 Check the managedFields.
 ```console
