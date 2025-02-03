@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qwen2-copy
+  namespace: default
+  labels:
+    app: qwen2-copy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qwen2-copy
+  template:
+    metadata:
+      labels:
+        app: qwen2-copy
+    spec:
+      volumes:
+      # vLLM needs to access the host's shared memory for tensor parallel inference.
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: "2Gi"
+      - name: shared-adapters
+        persistentVolumeClaim:
+          claimName: shared-adapters
+      containers:
+      - name: qwen2-copy
+        image: docker.io/library/vllm-cpu-env:latest
+        imagePullPolicy: IfNotPresent
+        command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
+        args: ["--model", "Qwen/Qwen2-0.5B-Instruct", "--enable-lora", "--lora-modules", "code-lora=/data/qwen2-code-lora"]
+        env:
+        - name: VLLM_ALLOW_RUNTIME_LORA_UPDATING
+          value: "True"
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            cpu: "10"
+            memory: 20G
+            # nvidia.com/gpu: "1"
+          requests:
+            cpu: "2"
+            memory: 4G
+            # nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: shm
+          mountPath: /dev/shm
+        - name: shared-adapters
+          mountPath: /data
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 5

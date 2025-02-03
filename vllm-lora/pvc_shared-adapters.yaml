@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-adapters
+spec:
+  accessModes:
+    - ReadWriteOnce  # Use RWX if needed for multi-node sharing
+  resources:
+    requests:
+      storage: 4Gi

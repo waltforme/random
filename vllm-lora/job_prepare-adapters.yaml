@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: prepare-adapters
+spec:
+  template:
+    spec:
+      volumes:
+        - name: shared-adapters
+          persistentVolumeClaim:
+            claimName: shared-adapters
+      containers:
+        - name: preparer
+          image: myrepo/prepare-adapters:latest  # Prebuilt image with huggingface_hub
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: "/data"
+              name: shared-adapters
+      restartPolicy: OnFailure
