@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: qwen2-copy
+  labels:
+    app: qwen2-copy
+spec:
+  type: NodePort
+  ports:
+  - nodePort: 30081
+    port: 80
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    app: qwen2-copy
