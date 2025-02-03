@@ -30,23 +30,30 @@ Getting hands on LoRA adapters with vLLM.
 └────────────────────────────────────────────────────────────────────┘
 ```
 
-### serve via kubernetes
+### Steps
+
 ```shell
-kind create cluster --config=/home/ubuntu/debug/vllm/lora/kind/cluster_lora.yaml
+kind create cluster --config=./vllm-lora/kind/cluster_lora.yaml
 
-docker build -t myrepo/prepare-adapters:latest . # in the preparer dir
+pushd ./vllm-lora/preparer
+docker build -t myrepo/prepare-adapters:latest .
 kind load --name lora docker-image myrepo/prepare-adapters:latest
-docker exec -it lora-control-plane crictl images
+docker exec lora-control-plane crictl images
+popd
 
-kubectl apply -f /home/ubuntu/debug/vllm/lora/pvc_shared-adapters.yaml
-kubectl apply -f /home/ubuntu/debug/vllm/lora/job_prepare-adapters.yaml
+kubectl apply -f ./vllm-lora/pvc_shared-adapters.yaml
+kubectl apply -f ./vllm-lora/job_prepare-adapters.yaml
+kubectl logs job/prepare-adapters # "All adapters downloaded successfully."
 
+# Build in the root dir of your clone of https://github.com/vllm-project/vllm.git.
+# This experiment uses commit dd6a3a02cb3bf2a7bc6cb84c85dcd57c6eaf2bf9.
 docker build -f Dockerfile.cpu -t vllm-cpu-env --shm-size=4g .
 kind load --name lora docker-image vllm-cpu-env:latest
-docker exec -it lora-control-plane crictl images
+docker exec lora-control-plane crictl images
 
-kubectl apply -f /home/ubuntu/debug/vllm/lora/deployment_qwen2.yaml
-kubectl apply -f /home/ubuntu/debug/vllm/lora/service_qwen2.yaml
+kubectl apply -f ./vllm-lora/deployment_qwen2.yaml
+kubectl wait --for=condition=Available deployment/qwen2 --timeout=300s
+kubectl apply -f ./vllm-lora/service_qwen2.yaml
 curl -s http://localhost:30080/v1/models | jq # two items, base model plus lora adapter "ru-lora"
 curl -s http://localhost:30080/v1/models | jq .data[0].id # "Qwen/Qwen2-0.5B-Instruct"
 curl -s http://localhost:30080/v1/models | jq .data[1].id # "ru-lora"
@@ -70,7 +77,7 @@ curl -X POST http://localhost:30080/v1/load_lora_adapter \
 }'
 curl -s http://localhost:30080/v1/models | jq .data[1].id
 
-# inference by base
+# inference by Qwen2-0.5B-Instruct
 curl -s http://localhost:30080/v1/completions \
     -H "Content-Type: application/json" \
     -d '{
@@ -80,7 +87,7 @@ curl -s http://localhost:30080/v1/completions \
         "temperature": 0
     }' | jq .choices[0].text
 
-# inference by base+ru-lora
+# inference by Qwen2-0.5B-Instruct+ru-lora
 curl -s http://localhost:30080/v1/completions \
     -H "Content-Type: application/json" \
     -d '{
@@ -91,11 +98,12 @@ curl -s http://localhost:30080/v1/completions \
     }' | jq .choices[0].text
 
 # sharing adapters
-kubectl apply -f /home/ubuntu/debug/vllm/lora/deployment_qwen2-copy.yaml
-kubectl apply -f /home/ubuntu/debug/vllm/lora/service_qwen2-copy.yaml
+kubectl apply -f ./vllm-lora/deployment_qwen2-copy.yaml
+kubectl wait --for=condition=Available deployment/qwen2-copy --timeout=300s
+kubectl apply -f ./vllm-lora/service_qwen2-copy.yaml
 curl -s http://localhost:30081/v1/models | jq # two items, base model plus lora adapter "code-lora"
 
-# inference by base
+# inference by Qwen2-0.5B-Instruct
 curl -s http://localhost:30081/v1/completions \
     -H "Content-Type: application/json" \
     -d '{
@@ -105,7 +113,7 @@ curl -s http://localhost:30081/v1/completions \
         "temperature": 0
     }' | jq .choices[0].text
 
-# inference by base+code-lora
+# inference by Qwen2-0.5B-Instruct+code-lora
 curl -s http://localhost:30081/v1/completions \
     -H "Content-Type: application/json" \
     -d '{
@@ -123,9 +131,10 @@ curl -X POST http://localhost:30081/v1/load_lora_adapter \
     "lora_name": "ru-lora",
     "lora_path": "/data/qwen2-ru-lora"
 }'
+curl -s http://localhost:30081/v1/models | jq # three items, base model plus lora adapters "code-lora" and "ru-lora"
 curl -s http://localhost:30081/v1/models | jq .data[2].id
 
-# inference by base+ru-lora
+# inference by Qwen2-0.5B-Instruct+ru-lora
 curl -s http://localhost:30081/v1/completions \
     -H "Content-Type: application/json" \
     -d '{
@@ -144,12 +153,16 @@ curl -X POST http://localhost:30081/v1/unload_lora_adapter \
 }'
 curl -s http://localhost:30081/v1/models | jq .data[2].id # null
 
-# tearing down
-kubectl delete -f /home/ubuntu/debug/vllm/lora/
+# cleaning up workloads from the cluster
+kubectl delete -f ./vllm-lora/
+
+# tearing down the cluster
+kind delete cluster --name lora
 ```
 
-### serve via local python run
-lora can be statically loaded at the beginning, or dynamically loaded/unloaded at runtime
+### Local Python Run without Kubernetes
+LoRA adapters can be statically loaded at the beginning, or dynamically loaded/unloaded at runtime.
+
 ```shell
 vllm serve Qwen/Qwen2-0.5B-Instruct \
     --enable-lora \
