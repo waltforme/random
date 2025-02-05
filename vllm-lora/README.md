@@ -123,7 +123,7 @@ curl -s http://localhost:30080/v1/completions \
     }' | jq .choices[0].text
 ```
 
-Take simlar steps to run the 2nd vLLM instance.
+Take similar steps to run the 2nd vLLM instance.
 ```shell
 kubectl apply -f ./vllm-lora/deployment_qwen2-copy.yaml
 kubectl wait --for=condition=Available deployment/qwen2-copy --timeout=300s
