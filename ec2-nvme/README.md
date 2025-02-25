@@ -11,6 +11,7 @@ sudo apt install nvme-cli
 
 ### Commands as root
 
+Looks like I have to do these after every start of the EC2 instance.
 ```shell
 nvme list
 ls -1 /dev/nvme*
@@ -31,7 +32,6 @@ chown ubuntu:ubuntu /mnt/instance-store
 ```shell
 mkdir /mnt/instance-store/hf
 vllm serve ibm-granite/granite-3.0-2b-base --download-dir /mnt/instance-store/hf/
-rm -rf /mnt/instance-store/hf/ # clean up, but will disappear anyway after stop and start the EC2 instance
 ```
 
 ### Speed tests
@@ -43,4 +43,10 @@ rm /mnt/instance-store/testfile
 dd if=/dev/zero of=/home/ubuntu/.cache/my-testfile bs=1G count=5 oflag=direct
 dd if=/home/ubuntu/.cache/my-testfile of=/dev/null bs=1G count=5 iflag=direct
 rm /home/ubuntu/.cache/my-testfile
+```
+
+Or use `fio`.
+```shell
+fio --name=write_test --filename=/mnt/instance-store/testfile --size=5G --bs=1M --rw=write --direct=1 --numjobs=1 --iodepth=1
+fio --name=read_test --filename=/mnt/instance-store/testfile --size=5G --bs=1M --rw=read --direct=1 --numjobs=1 --iodepth=1
 ```
