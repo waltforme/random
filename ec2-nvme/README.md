@@ -30,7 +30,7 @@ chown ubuntu:ubuntu /mnt/instance-store
 
 ```shell
 mkdir /mnt/instance-store/hf
-vllm serve ibm-granite/granite-3.0-2b-base --download-dir /mnt/instance-store/
+vllm serve ibm-granite/granite-3.0-2b-base --download-dir /mnt/instance-store/hf/
 rm -rf /mnt/instance-store/hf/ # clean up, but will disappear anyway after stop and start the EC2 instance
 ```
 
