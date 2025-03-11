@@ -5,6 +5,61 @@ An experiment attempting to make two vLLM instances cosleep on one GPU
 - Kubernetes v1.32.2 bootstrapped by kubeadm
 - vLLM v0.7.3
 
+### Two bare processes
+
+Two vLLM instances can cosleep on the GPU.
+They can't be both awake on one GPU. I got
+```text
+ERROR 03-11 17:23:51 [core.py:305]     raise ValueError("No available memory for the cache blocks. "
+ERROR 03-11 17:23:51 [core.py:305] ValueError: No available memory for the cache blocks. Try increasing `gpu_memory_utilization` when initializing the engine.
+```
+when I tried that without specifying the `--gpu-memory-utilization` flag.
+
+#### Commands
+
+First vLLM instance.
+```shell
+VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve openai-community/gpt2 --enable-sleep-mode --port 8001
+```
+
+Second vLLM intance.
+```shell
+VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve openai-community/gpt2 --enable-sleep-mode --port 8002
+```
+
+An additional terminal to control the two vLLM instances.
+```shell
+curl -X POST localhost:8001/sleep
+curl -X POST localhost:8002/sleep
+
+curl -X POST localhost:8001/wake_up # succeeded
+curl -s localhost:8001/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+        "model": "openai-community/gpt2",
+        "prompt": "IBM is a",
+        "max_tokens": 20
+
+      }' | jq
+curl -X POST localhost:8001/sleep
+
+curl -X POST localhost:8002/wake_up # succeeded
+curl -s localhost:8002/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+        "model": "openai-community/gpt2",
+        "prompt": "IBM is a",
+        "max_tokens": 20
+      }' | jq
+curl -X POST localhost:8002/sleep
+
+nvidia-smi # 968MiB in use
+kill 488147
+nvidia-smi # 487MiB in use
+kill 489275
+nvidia-smi # 1MiB in use
+```
+
 ### One Kubernetes Deployment and one bare process
 
 If the Deployment is awake and I try to wake up the sleeping bare process, I get
