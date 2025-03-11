@@ -29,7 +29,9 @@ VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve openai-community/gpt2 --enable-s
 
 An additional terminal to control the two vLLM instances.
 ```shell
+# start the 1st instance
 curl -X POST localhost:8001/sleep
+# start the 2nd instance
 curl -X POST localhost:8002/sleep
 
 curl -X POST localhost:8001/wake_up # succeeded
@@ -58,6 +60,78 @@ kill 488147
 nvidia-smi # 487MiB in use
 kill 489275
 nvidia-smi # 1MiB in use
+```
+
+### Two bare processes with `--gpu_memory_utilization` flag
+
+Two vLLM instances can cosleep on the GPU.
+They can be both awake on one GPU, with `--gpu_memory_utilization 0.4`.
+
+#### Commands
+
+First vLLM instance.
+```
+VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve ibm-granite/granite-3.2-2b-instruct --max-model-len 1024 --gpu_memory_utilization 0.4 --enable-sleep-mode --port 8001
+```
+
+Second vLLM instance.
+```
+VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve ibm-granite/granite-3.2-2b-instruct --max-model-len 1024 --gpu_memory_utilization 0.4 --enable-sleep-mode --port 8002
+```
+
+An additional terminal to control the two vLLM instances.
+```shell
+# start the 1st instance
+curl -X POST localhost:8001/sleep
+# start the 2nd instance
+curl -X POST localhost:8002/sleep
+
+curl -X POST localhost:8001/wake_up # succeeded
+curl -s localhost:8001/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+        "model": "ibm-granite/granite-3.2-2b-instruct",
+        "prompt": "IBM is a",
+        "max_tokens": 20
+      }' | jq
+curl -X POST localhost:8001/sleep
+
+curl -X POST localhost:8002/wake_up # succeeded
+curl -s localhost:8002/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+        "model": "ibm-granite/granite-3.2-2b-instruct",
+        "prompt": "IBM is a",
+        "max_tokens": 20
+      }' | jq
+curl -X POST localhost:8002/sleep
+
+curl -X POST localhost:8001/wake_up # succeeded
+curl -X POST localhost:8002/wake_up # succeeded
+curl -s localhost:8001/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+        "model": "ibm-granite/granite-3.2-2b-instruct",
+        "prompt": "IBM is a",
+        "max_tokens": 20
+      }' | jq
+curl -s localhost:8002/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+        "model": "ibm-granite/granite-3.2-2b-instruct",
+        "prompt": "IBM is a",
+        "max_tokens": 20
+      }' | jq
+
+nvidia-smi # 14036MiB /  23034MiB
+curl -X POST localhost:8001/sleep
+nvidia-smi # 7454MiB /  23034MiB
+curl -X POST localhost:8002/sleep
+nvidia-smi 1752MiB /  23034MiB
+kill 495224
+nvidia-smi # 881MiB /  23034MiB
+kill 495938
+nvidia-smi # 1MiB /  23034MiB
 ```
 
 ### One Kubernetes Deployment and one bare process
