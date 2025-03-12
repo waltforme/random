@@ -71,12 +71,12 @@ They can be both awake on one GPU, with `--gpu_memory_utilization 0.4`.
 
 First vLLM instance.
 ```
-VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve ibm-granite/granite-3.2-2b-instruct --max-model-len 1024 --gpu_memory_utilization 0.4 --enable-sleep-mode --port 8001
+date; VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve ibm-granite/granite-3.2-2b-instruct --max-model-len 1024 --gpu_memory_utilization 0.4 --enable-sleep-mode --port 8001
 ```
 
 Second vLLM instance.
 ```
-VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve ibm-granite/granite-3.2-2b-instruct --max-model-len 1024 --gpu_memory_utilization 0.4 --enable-sleep-mode --port 8002
+date; VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve ibm-granite/granite-3.2-2b-instruct --max-model-len 1024 --gpu_memory_utilization 0.4 --enable-sleep-mode --port 8002
 ```
 
 An additional terminal to control the two vLLM instances.
