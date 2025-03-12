@@ -19,12 +19,12 @@ when I tried that without specifying the `--gpu-memory-utilization` flag.
 
 First vLLM instance.
 ```shell
-VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve openai-community/gpt2 --enable-sleep-mode --port 8001
+date; VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve openai-community/gpt2 --enable-sleep-mode --port 8001
 ```
 
 Second vLLM intance.
 ```shell
-VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve openai-community/gpt2 --enable-sleep-mode --port 8002
+date; VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve openai-community/gpt2 --enable-sleep-mode --port 8002
 ```
 
 An additional terminal to control the two vLLM instances.
@@ -71,12 +71,12 @@ They can be both awake on one GPU, with `--gpu_memory_utilization 0.4`.
 
 First vLLM instance.
 ```
-date; VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve ibm-granite/granite-3.2-2b-instruct --max-model-len 1024 --gpu_memory_utilization 0.4 --enable-sleep-mode --port 8001
+date; VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve ibm-granite/granite-3.2-2b-instruct --max-model-len 1024 --gpu_memory_utilization 1.0 --enable-sleep-mode --port 8001
 ```
 
 Second vLLM instance.
 ```
-date; VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve ibm-granite/granite-3.2-2b-instruct --max-model-len 1024 --gpu_memory_utilization 0.4 --enable-sleep-mode --port 8002
+date; VLLM_USE_V1=1 VLLM_SERVER_DEV_MODE=1 vllm serve ibm-granite/granite-3.2-2b-instruct --max-model-len 1024 --gpu_memory_utilization 1.0 --enable-sleep-mode --port 8002
 ```
 
 An additional terminal to control the two vLLM instances.
@@ -168,7 +168,7 @@ At lease in the absence of any GPU sharing technologies.
 ### Commands for bare process
 
 ```shell
-VLLM_USE_V1=1 VLLM_LOGGING_LEVEL=DEBUG VLLM_SERVER_DEV_MODE=1 vllm serve openai-community/gpt2 --enable-sleep-mode --enforce-eager
+date; VLLM_USE_V1=1 VLLM_LOGGING_LEVEL=DEBUG VLLM_SERVER_DEV_MODE=1 vllm serve openai-community/gpt2 --enable-sleep-mode --enforce-eager
 curl -s localhost:8000/v1/completions \
   -H "Content-Type: application/json" \
   -d '{
