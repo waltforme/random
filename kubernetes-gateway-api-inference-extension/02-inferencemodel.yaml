@@ -1,0 +1,12 @@
+apiVersion: inference.networking.x-k8s.io/v1alpha2
+kind: InferenceModel
+metadata:
+  name: news
+spec:
+  modelName: news
+  criticality: Standard
+  poolRef:
+    name: vllm-llama3-3b-instruct
+  targetModels:
+  - name: news-1
+    weight: 100
