@@ -90,6 +90,7 @@ kubectl create -f ./kubernetes-gateway-api-inference-extension/05-httproute.yaml
 ```
 
 ## Grayscale release
+Send a completion request to the model "news".
 ```shell
 curl -i ${GW_IP}:${GW_PORT}/v1/completions -H 'Content-Type: application/json' -d '{
   "model": "news",
@@ -99,9 +100,102 @@ curl -i ${GW_IP}:${GW_PORT}/v1/completions -H 'Content-Type: application/json' -
 }'
 ```
 
+Add a second LoRA adapter `news-2` by editing the ConfigMap for LoRA configuration.
+```shell
+kubectl edit configmap vllm-llama3-3b-instruct-adapters
+```
+
+Specifically:
+```yaml
+          - id: news-2
+            source: saishmendke10/news_llm_3.2_3b # same as new-1 for demonstration only
+```
+
+Check the log of the lora-adapter-syncer container of the vLLM's Deployment. 
+```shell
+kubectl logs deploy/vllm-llama3-3b-instruct -c lora-adapter-syncer --tail 5 -f
+```
+
+The log should say `news-2` loaded.
+```console
+2025-06-10 14:16:18 - INFO - sidecar.py:324 -  Waiting 5s before next reconciliation...
+2025-06-10 14:16:23 - INFO - sidecar.py:73 -  modified!
+2025-06-10 14:16:23 - INFO - sidecar.py:74 -  Config '/config/configmap.yaml' modified!
+2025-06-10 14:16:23 - INFO - sidecar.py:269 -  reconciling model server localhost:8000 with config stored at /config/configmap.yaml
+2025-06-10 14:16:23 - INFO - sidecar.py:328 -  Periodic reconciliation triggered
+2025-06-10 14:16:23 - WARNING - sidecar.py:280 -  skipped adapters found in both `ensureExist` and `ensureNotExist` 
+2025-06-10 14:16:23 - INFO - sidecar.py:269 -  reconciling model server localhost:8000 with config stored at /config/configmap.yaml
+2025-06-10 14:16:23 - INFO - sidecar.py:285 -  adapter to load news-2, news-1
+2025-06-10 14:16:23 - WARNING - sidecar.py:280 -  skipped adapters found in both `ensureExist` and `ensureNotExist` 
+2025-06-10 14:16:23 - INFO - sidecar.py:285 -  adapter to load news-2, news-1
+2025-06-10 14:16:23 - INFO - sidecar.py:245 -  loaded model news-2
+```
+
+Check the list of models.
 ```shell
 curl -s ${GW_IP}:${GW_PORT}/v1/models | jq
 ```
+
+Specify the weights between `news-1` and `news-2`.
+```shell
+kubectl edit inferencemodel news
+```
+
+Specifically:
+```yaml
+targetModels:
+  - name: news-1
+    weight: 80
+  - name: news-2
+    weight: 20
+```
+
+Send the same completion request to the model "news".
+The response should contain `"model":"news-1"` or `"model":"news-2"`.
+Observe the frequencies of the two, the ratio should be roughly 80:20.
+
+Check the log of the Endpoint Picker.
+```shell
+kubectl logs vllm-llama3-3b-instruct-epp-8546b8d8f9-pt59c  --tail 10 -f
+```
+
+Specifically, look at the `resolvedTargetModel`.
+```console
+{"level":"Level(-4)","ts":"2025-06-10T14:26:02Z","caller":"picker/random_picker.go:48","msg":"Selecting a random pod from 1 candidates: [{Pod:{NamespacedName:default/vllm-llama3-3b-instruct-7567659556-mrqgm Address:10.0.0.146 Labels:map[app:vllm-llama3-3b-instruct pod-template-hash:7567659556]} MetricsState:{ActiveModels:map[news-1:0] WaitingModels:map[] MaxActiveModels:2 RunningQueueSize:0 WaitingQueueSize:0 KVCacheUsagePercent:0 KvCacheMaxTokenCapacity:0 UpdateTime:2025-06-10 14:26:02.005371182 +0000 UTC m=+42927.182379848}}]","x-request-id":"d9c12e56-621a-4d8a-ab4e-97ebf3bc8cc5","model":"news","resolvedTargetModel":"news-2","criticality":"Standard"}
+```
+
+Specify the weights between `news-1` and `news-2` again, to completely switch to `news-2`.
+```yaml
+targetModels:
+  - name: news-2
+    weight: 100
+```
+
+Send the same completion request to the model "news".
+Observe the responses. All traffic should now go to `news-2`.
+
+Remove the 1st LoRA adapter `news-1` by editing the ConfigMap again. Specifically:
+```yaml
+      ensureNotExist:
+        models:
+          - id: news-1
+            source: saishmendke10/news_llm_3.2_3b
+      ensureExist:
+        models:
+          - id: news-2
+            source: saishmendke10/news_llm_3.2_3b
+```
+
+Check the log of the lora-adapter-syncer container again.
+The log should say `news-1` unloaded.
+```console
+2025-06-10 14:31:08 - INFO - sidecar.py:285 -  adapter to load news-2
+2025-06-10 14:31:08 - INFO - sidecar.py:232 -  news-2 already present on model server localhost:8000
+2025-06-10 14:31:08 - INFO - sidecar.py:290 -  adapters to unload news-1
+2025-06-10 14:31:08 - INFO - sidecar.py:261 -  unloaded model news-1
+```
+
+Now the grayscale release is complete.
 
 ## Cleaning up
 Cleaning up is the reverse of the Setup.
