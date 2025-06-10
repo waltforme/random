@@ -10,14 +10,16 @@ I made some changes to the YAML files to fix minor mistakes and to fit it into m
 The hardware used by this experiment is an AWS EC2 instance of type g6.4xlarge, which has a nVidia L4 GPU.
 A single-node Kubernetes v1.32.2 cluster is installed by kubeadm on top of the EC2 instance.
 
-As a prerequisite, I installed the Kubernetes Gateway API (i.e. CRDs)
-by following [k8s doc](https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.3.0/standard-install.yaml)
+I came up with some [drawing](https://docs.google.com/drawings/d/1GDgbaSLYbfACypv_s5qaR6EOMEoZRoeG9gKl1r55pR4/) mainly to visualize the relationship between the Kubernetes objects that appear in this experiment.
+
+## Setup
+0. As a prerequisite, I installed the Kubernetes Gateway API (i.e. CRDs)
+by following [k8s doc](https://gateway-api.sigs.k8s.io/guides/#installing-gateway-api).
 ```shell
 kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.3.0/standard-install.yaml
 ```
 This prerequisite is not explicitly mentioned in the article.
 
-## Setup
 1. Create a Secret for Hugging Face token.
 ```shell
 kubectl create secret generic hf-token --from-literal=token="<my-huggingface-token>"
@@ -48,7 +50,7 @@ kubectl create -f ./kubernetes-gateway-api-inference-extension/02-inferencemodel
 kubectl create -f ./kubernetes-gateway-api-inference-extension/03-inferencepool-resources.yaml
 ```
 
-6. Install the kgateway CRDS and the kgateway controller.
+6. Install the kgateway CRDs and the kgateway controller.
 ```shell
 KGTW_VERSION=v2.0.0
 helm upgrade -i --create-namespace --namespace kgateway-system --version $KGTW_VERSION kgateway-crds oci://cr.kgateway.dev/kgateway-dev/charts/kgateway-crds
@@ -204,7 +206,7 @@ kubectl delete -f ./kubernetes-gateway-api-inference-extension/05-httproute.yaml
 kubectl delete -f ./kubernetes-gateway-api-inference-extension/04-gateway.yaml
 
 helm -n kgateway-system uninstall kgateway
-helm -n kgateway-system uninstall kgateway-crd
+helm -n kgateway-system uninstall kgateway-crds
 kubectl delete ns kgateway-system
 
 kubectl delete -f ./kubernetes-gateway-api-inference-extension/03-inferencepool-resources.yaml
