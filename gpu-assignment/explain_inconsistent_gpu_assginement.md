@@ -89,7 +89,7 @@ index, uuid, memory.used [MiB]
 In this consistent assignment:
 - Pod specified GPU 1;
 - device plugin not involved;
-- GPU 1 were solely made accessible for the vLLM container as specified.
+- GPU 1 was solely made accessible for the vLLM container as specified.
 
 Why device plugin was not involved? See the kubelet code and my comment:
 ```txt
