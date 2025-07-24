@@ -48,7 +48,7 @@ Why the inconsistency exists:
 - device plugin recommended GPU 0;
 - kubelet allocated GPU 0;
 - both GPUs were made accessible for the vLLM container;
-- GPU 0 picked up by vLLM container, instead of the Pod specified GPU 1.
+- GPU 0 picked up by vLLM container, instead of the `PodSpec.Container.Env`-specified GPU 1.
 
 Make the assignment consistent.
 ```console
@@ -91,7 +91,7 @@ In this consistent assignment:
 - device plugin not involved;
 - GPU 1 was solely made accessible for the vLLM container as specified.
 
-Why device plugin was not involved? See the kubelet code and my comment:
+Why device plugin was not involved again? Let's look at a kubelet code snippet and my changed comment:
 ```txt
 @@ -832,7 +832,10 @@ func (m *ManagerImpl) allocateContainerResources(pod *v1.Pod, container *v1.Cont
         // Extended resources are not allowed to be overcommitted.
@@ -111,4 +111,6 @@ As commented, there might be some oppotunity here to contribute a feature to def
 - the user specified `NVIDIA_VISIBLE_DEVICES` in `PodSpec.Container.Env`, and
 - the user specified requests and limits for 'nvdia.com/gpu' in `PodSpec.Container.Resources`,
 
-so that more fine-grained control can be offered to the user.
+so that more fine-grained control --- assigning a specific set of GPUs --- can be offered to the user.
+
+I'm not sure where the contribution should go though. Going into kubelet sounds like a violation of modularity. Maybe into the consumer of the kubelet-processed PodSpec which sould be some container runtime?
