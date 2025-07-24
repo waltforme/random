@@ -4,8 +4,8 @@ But the running vLLM container usually saw more GPU than we specified by `NVIDIA
 
 This short experiment explains why the actually seen GPUs are inconsistent with what specified by `NVIDIA_VISIBLE_DEVICES`.
 
-The root cause of the inconsistency is that the device plugin consumes `PodSpec.Container.Resources` and accordingly recommends an allocation to the kubelet,
-then both the `PodSpec.Container.Env` specified GPUs and the `PodSpec.Container.Resources`-based allocation are honored.
+**The root cause of the inconsistency is that the device plugin consumes `PodSpec.Container.Resources` and accordingly recommends an allocation to the kubelet,
+then both the `PodSpec.Container.Env` specified GPUs and the `PodSpec.Container.Resources`-based allocation are honored.**
 
 There are four GPUs in the node of my test setup.
 ```console
