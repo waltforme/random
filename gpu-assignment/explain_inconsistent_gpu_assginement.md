@@ -113,4 +113,4 @@ As commented, there might be some oppotunity here to contribute a feature to def
 
 so that more fine-grained control --- assigning a specific set of GPUs --- can be offered to the user.
 
-I'm not sure where the contribution should go though. Going into kubelet sounds like a violation of modularity. Maybe into the consumer of the kubelet-processed PodSpec which sould be some container runtime?
+I'm not sure where the contribution should go though. Going into kubelet sounds like a violation of modularity. Maybe into the consumer of the kubelet-processed PodSpec which sould be nvidia container runtime?
