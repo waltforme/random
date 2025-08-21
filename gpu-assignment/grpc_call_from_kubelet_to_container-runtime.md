@@ -76,5 +76,5 @@ But what happens if there are two *instances* of *one* `NVIDIA_VISIBLE_DEVICES` 
 ## Conclusions
 - I suspect some other entity has duplicated functionality with the (kubelet, device plugin) pair,
 in terms of mounting the GPU(s) and supportive devices into the container.
-- I suspect that entity is (part of) the nvidia container runtime.
+- I suspect that entity is (part of) the nvidia container toolkit.
 - I suspect this duplication is the source of our GPU assignment problem.
