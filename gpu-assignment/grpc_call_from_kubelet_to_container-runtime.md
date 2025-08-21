@@ -70,7 +70,8 @@ One line of [nvidia container runtime code](https://github.com/NVIDIA/nvidia-con
 
 > Each environment variable maps to an command-line argument...
 
-OK 'each' envar. But what happens if there are two instances of one `NVIDIA_VISIBLE_DEVICES` envar?
+OK 'each' envar and yes I [tried](https://github.com/NVIDIA/nvidia-container-toolkit/pull/1257) to fix the typo.
+But what happens if there are two *instances* of *one* `NVIDIA_VISIBLE_DEVICES` envar?
 
 ## Conclusions
 - I suspect some other entity has duplicated functionality with the (kubelet, device plugin) pair,
