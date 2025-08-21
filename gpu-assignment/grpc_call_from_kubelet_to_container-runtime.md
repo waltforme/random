@@ -43,14 +43,14 @@ I didn't find differences between these two cases when I was observing the `Cont
 For the 'null/zero' case:
 - The 1st instance of the `NVIDIA_VISIBLE_DEVICES` envar disappears from `ContainerConfig.Envs`;
 - GPU(s) `/dev/nvidiaX` are not injected into `ContainerConfig.Mounts`;
-- 'Supportive' devices such as `/dev/nvidiactl`, `/dev/nvidia-uvm`, `/dev/nvidia-uvm-tools`, `/dev/nvidia-modeset` are not injected into `ContainerConfig.Mounts`;
+- 'Supportive' devices such as `/dev/nvidiactl`, `/dev/nvidia-uvm`, `/dev/nvidia-uvm-tools`, `/dev/nvidia-modeset` are not injected into `ContainerConfig.Mounts`.
 
 For the 'null/zero' case, if `NVIDIA_VISIBLE_DEVICES` is specified in `PodSpec.Container.Env`:
 - The 2nd instance of the `NVIDIA_VISIBLE_DEVICES` envar stays in `ContainerConfig.Envs`;
 - The vLLM pod is able to run using the GPU(s) specified by the 2nd instance of the envar.
 
 For the 'null/zero' case, if `NVIDIA_VISIBLE_DEVICES` is not specified in `PodSpec.Container.Env`:
-- The 2nd instance of the `NVIDIA_VISIBLE_DEVICES` envar disappears from `ContainerConfig.Envs`
+- The 2nd instance of the `NVIDIA_VISIBLE_DEVICES` envar disappears from `ContainerConfig.Envs`;
 - The vLLM pod is able to see all GPU(s).
 
 ## Check the nvidia container toolkit
