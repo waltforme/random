@@ -1,8 +1,9 @@
 In the [previous experiment](./grpc_call_from_kubelet_to_container-runtime.md), I saw two instances of the `NVIDIA_VISIBLE_DEVICES` envar in `ContainerConfig` that is passed from the kubelet to the container runtime.
 
 Natually, a question is: Which instance is respected? This experiment answers the question.
-The short answer is: Whichever appears lastly in the envar list is respected by nvidia container runtime, specifically `nvidia-container-cli`, the one appears firstly is ignored by `nvidia-container-cli`.
+The short answer is: Whichever appears lastly in the envar list is respected by nvidia container toolkit, specifically `nvidia-container-cli`; the one appears firstly is ignored by `nvidia-container-cli`.
 
+On top of that, this experiment also confirms that the `nvidia-container-cli` can assign GPUs independently from the kubelet.
 
 ## The order of the two instances matters
 I wrote a helper function to swap the two instances of the envar.
@@ -133,7 +134,7 @@ func deleteAllInjectedDevsFromContainerConfig(cfg *runtimeapi.ContainerConfig) {
 }
 ```
 
-Turns out that `nvidia-container-cli` can by its own setup 'supportive' devices such as '/dev/nvidiactl'.
+Turns out that `nvidia-container-cli` can by its own setup 'supportive' devices.
 ```txt
 root@ckjdqefd30-granite-3-2-2b-instruct-vllm-stack:/vllm-workspace# ls -l /dev/nvidia*
 crw-rw-rw- 1 root root 235,   0 Aug 14 18:47 /dev/nvidia-uvm
@@ -143,7 +144,7 @@ crw-rw-rw- 1 root root 195, 255 Aug 14 18:44 /dev/nvidiactl
 ```
 There is slight difference though, which is `nvidia-container-cli` didn't inject `/dev/nvidia-modeset`.
 
-So, kubelet-injected 'supportive' devices can be safely removed from the ContainerConfig before kubelet issuing CreateContainer call through CRI.
+So, all of the kubelet-injected devices can be safely removed from the ContainerConfig before kubelet issuing CreateContainer call through CRI.
 As long as a valid `NVIDIA_VISIBLE_DEVICES`, which is the human-specified one here, exists in the ContainerConfig.
 `nvidia-container-cli` will consume the valid `NVIDIA_VISIBLE_DEVICES` and setup the GPU and the 'supportive' devices.
 
