@@ -66,7 +66,7 @@ For example,
 &KeyValue{Key: KUBERNETES_PORT_443_TCP_PORT, Value: 443},
 ```
 
-This explains why the vLLM pod *always* see the human specified GPU, but only *usualy* (when the corresponding GPUs of the two envar instances differ) see the kubelet-injected GPU.
+This explains why the vLLM pod *always* see the human specified GPU, but only *usually* (when the corresponding GPUs of the two envar instances differ) see the kubelet-injected GPU.
 
 
 ## The kubelet injected '/dev/nvidiaX' is effective
