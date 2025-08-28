@@ -160,5 +160,5 @@ this defaulting logic is *not* the reason why all GPUs are visible inside the vL
 
 ## Conclusion
 If `NVIDIA_VISIBLE_DEVICES` is not present when kubelet calls container runtime,
-then `NVIDIA_VISIBLE_DEVICES=all` inside the vLLM container takes the precedence,
+then `NVIDIA_VISIBLE_DEVICES=all` inside the vLLM container image takes the precedence,
 thus makes all GPUs visible inside the vLLM container.
