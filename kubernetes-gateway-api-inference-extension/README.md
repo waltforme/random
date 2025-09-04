@@ -31,7 +31,7 @@ kubectl create -f ./kubernetes-gateway-api-inference-extension/01-gpu-deployment
 ```
 Check logs of the vLLM instance.
 ```shell
-kubectl logs deploy/01-gpu-deployment.yaml
+kubectl logs deploy/vllm-llama3-3b-instruct -f
 ```
 
 3. Install the GIE CRDs.
