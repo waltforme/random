@@ -94,7 +94,7 @@ kubectl create -f ./kubernetes-gateway-api-inference-extension/05-httproute.yaml
 ## Grayscale release
 Send a completion request to the model "news".
 ```shell
-curl -i ${GW_IP}:${GW_PORT}/v1/completions -H 'Content-Type: application/json' -d '{
+curl ${GW_IP}:${GW_PORT}/v1/completions -H 'Content-Type: application/json' -d '{
   "model": "news",
   "prompt": "Write as if you were a critic: San Francisco",
   "max_tokens": 100,
