@@ -5,7 +5,7 @@ I added additional logging to the kubelet source to show the `ContainerConfig` t
 ## Two instances of the `NVIDIA_VISIBLE_DEVICES` envar
 
 There are two instances of the `NVIDIA_VISIBLE_DEVICES` envar in the `ContainerConfig`, where
-1. The 1st instance corresponds to the GPU(s) injected by the kubelet, based on the device plugin's preferred allocation. This one uses UUID(s);
+1. The 1st instance corresponds to the GPU(s) injected by the kubelet, based on the device plugin's preferred allocation. This one uses UUID(s) by default;
 2. The 2nd instance corresponds to the GPU(s) specified by me in `PodSpec.Container.Env`.
 
 Below is what I saw from the additional logging.
