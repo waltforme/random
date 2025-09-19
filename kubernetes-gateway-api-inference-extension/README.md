@@ -15,81 +15,81 @@ I came up with some [drawing](https://docs.google.com/drawings/d/1GDgbaSLYbfACyp
 ## Setup
 0. As a prerequisite, I installed the Kubernetes Gateway API (i.e. CRDs)
 by following [k8s doc](https://gateway-api.sigs.k8s.io/guides/#installing-gateway-api).
-```shell
-kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.3.0/standard-install.yaml
-```
-This prerequisite is not explicitly mentioned in the article.
+    ```shell
+    kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.3.0/standard-install.yaml
+    ```
+    This prerequisite is not explicitly mentioned in the article.
 
 1. Create a Secret for Hugging Face token.
-```shell
-kubectl create secret generic hf-token --from-literal=token="<my-huggingface-token>"
-```
+    ```shell
+    kubectl create secret generic hf-token --from-literal=token="<my-huggingface-token>"
+    ```
 
 2. Create a Deployment for the vLLM instance and a ConfigMap for LoRA configurations.
-```shell
-kubectl create -f ./kubernetes-gateway-api-inference-extension/01-gpu-deployment.yaml
-```
-Check logs of the vLLM instance.
-```shell
-kubectl logs deploy/vllm-llama3-3b-instruct -f
-```
+    ```shell
+    kubectl create -f ./kubernetes-gateway-api-inference-extension/01-gpu-deployment.yaml
+    ```
+    Check logs of the vLLM instance.
+    ```shell
+    kubectl logs deploy/vllm-llama3-3b-instruct -f
+    ```
 
 3. Install the GIE CRDs.
-```shell
-GIE_VERSION=v0.2.0
-kubectl apply -f https://github.com/kubernetes-sigs/gateway-api-inference-extension/releases/download/$GIE_VERSION/manifests.yaml
-```
+    ```shell
+    GIE_VERSION=v0.2.0
+    kubectl apply -f https://github.com/kubernetes-sigs/gateway-api-inference-extension/releases/download/$GIE_VERSION/manifests.yaml
+    ```
 
 4. Create the InferenceModel.
-```shell
-kubectl create -f ./kubernetes-gateway-api-inference-extension/02-inferencemodel.yaml
-```
+    ```shell
+    kubectl create -f ./kubernetes-gateway-api-inference-extension/02-inferencemodel.yaml
+    ```
 
 5. Create resources for the InferencePool, the Endpoint Picker (EPP), and RBAC.
-```shell
-kubectl create -f ./kubernetes-gateway-api-inference-extension/03-inferencepool-resources.yaml
-```
+    ```shell
+    kubectl create -f ./kubernetes-gateway-api-inference-extension/03-inferencepool-resources.yaml
+    ```
 
 6. Install the kgateway CRDs and the kgateway controller.
-```shell
-KGTW_VERSION=v2.0.0
-helm upgrade -i --create-namespace --namespace kgateway-system --version $KGTW_VERSION kgateway-crds oci://cr.kgateway.dev/kgateway-dev/charts/kgateway-crds
-helm upgrade -i --namespace kgateway-system --version $KGTW_VERSION kgateway oci://cr.kgateway.dev/kgateway-dev/charts/kgateway --set inferenceExtension.enabled=true
-```
+    ```shell
+    KGTW_VERSION=v2.0.0
+    helm upgrade -i --create-namespace --namespace kgateway-system --version $KGTW_VERSION kgateway-crds oci://cr.kgateway.dev/kgateway-dev/charts/kgateway-crds
+    helm upgrade -i --namespace kgateway-system --version $KGTW_VERSION kgateway oci://cr.kgateway.dev/kgateway-dev/charts/kgateway --set inferenceExtension.enabled=true
+    ```
 
 7. Create the Gateway.
-```shell
-kubectl create -f ./kubernetes-gateway-api-inference-extension/04-gateway.yaml
-```
+    ```shell
+    kubectl create -f ./kubernetes-gateway-api-inference-extension/04-gateway.yaml
+    ```
 
-After creation of the Gateway `inference-gateway`, a Depolyment also named `inference-gateway` is created by kgateway.
-The Deployment has a owner reference to the Gateway.
-```console
-{"level":"info","ts":"2025-06-09T16:19:28Z","logger":"kgateway","msg":"reconciling gateway","version":"v2.0.0","controller":"gateway","controllerGroup":"gateway.networking.k8s.io","controllerKind":"Gateway","Gateway":{"name":"inference-gateway","namespace":"default"},"namespace":"default","name":"inference-gateway","reconcileID":"d86cff55-0ad4-459d-9bd6-6ade72e9db6a","gw":{"name":"inference-gateway","namespace":"default"}}
-```
+    After creation of the Gateway `inference-gateway`, a Depolyment also named `inference-gateway` is created by kgateway.
+    The Deployment has a owner reference to the Gateway.
+    ```console
+    {"level":"info","ts":"2025-06-09T16:19:28Z","logger":"kgateway","msg":"reconciling gateway","version":"v2.0.0","controller":"gateway","controllerGroup":"gateway.networking.k8s.io","controllerKind":"Gateway","Gateway":{"name":"inference-gateway","namespace":"default"},"namespace":"default","name":"inference-gateway","reconcileID":"d86cff55-0ad4-459d-9bd6-6ade72e9db6a","gw":{"name":"inference-gateway","namespace":"default"}}
+    ```
 
-My gateway doesn't have an address.
-```console
-kubectl get gateway
-NAME                CLASS      ADDRESS   PROGRAMMED   AGE
-inference-gateway   kgateway             True         37m
-```
+    My gateway doesn't have an address.
+    ```console
+    kubectl get gateway
+    NAME                CLASS      ADDRESS   PROGRAMMED   AGE
+    inference-gateway   kgateway             True         37m
+    ```
 
-But I can use the Cluster-IP of the `inference-gateway` service as the address in the rest of the experiment.
-```console
-$ kubectl get svc
-NAME                          TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
-inference-gateway             LoadBalancer   10.99.83.145     <pending>     80:32693/TCP   38s
-kubernetes                    ClusterIP      10.96.0.1        <none>        443/TCP        95d
-vllm-llama3-3b-instruct-epp   ClusterIP      10.102.143.160   <none>        9002/TCP       2m8s
-$ GW_IP=10.99.83.145
-$ GW_PORT=80
-```
+    But I can use the Cluster-IP of the `inference-gateway` service as the address in the rest of the experiment.
+    ```console
+    $ kubectl get svc
+    NAME                          TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+    inference-gateway             LoadBalancer   10.99.83.145     <pending>     80:32693/TCP   38s
+    kubernetes                    ClusterIP      10.96.0.1        <none>        443/TCP        95d
+    vllm-llama3-3b-instruct-epp   ClusterIP      10.102.143.160   <none>        9002/TCP       2m8s
+    $ GW_IP=10.99.83.145
+    $ GW_PORT=80
+    ```
 
 8. Create the HTTPRoute.
-```shell
-kubectl create -f ./kubernetes-gateway-api-inference-extension/05-httproute.yaml
-```
+    ```shell
+    kubectl create -f ./kubernetes-gateway-api-inference-extension/05-httproute.yaml
+    ```
 
 ## Grayscale release
 Send a completion request to the model "news".

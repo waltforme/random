@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: vllm
-          image: "vllm/vllm-openai:v0.8.2"
+          image: "vllm/vllm-openai:v0.8.5"
           imagePullPolicy: IfNotPresent
           command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
           args:
@@ -28,6 +28,7 @@ spec:
           - "1024"
           - "--compilation-config"
           - "3"
+          - "--enable-sleep-mode"
           - "--enable-lora"
           - "--max-loras"
           - "2"
@@ -36,10 +37,6 @@ spec:
           - "--max-cpu-loras"
           - "12"
           env:
-            # Enabling LoRA support temporarily disables automatic v1, we want to force it on
-            # until 0.8.3 vLLM is released.
-            - name: VLLM_USE_V1
-              value: "1"
             - name: PORT
               value: "8000"
             - name: HUGGING_FACE_HUB_TOKEN
@@ -49,6 +46,8 @@ spec:
                   key: token
             - name: VLLM_ALLOW_RUNTIME_LORA_UPDATING
               value: "true"
+            - name: VLLM_SERVER_DEV_MODE
+              value: "1"
           ports:
             - containerPort: 8000
               name: http
