@@ -46,7 +46,9 @@ spec:
       terminationGracePeriodSeconds: 130
       containers:
       - name: epp
-        image: us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/epp:v20250606-c300d26
+        # image: us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/epp:v20250606-c300d26
+        # luckily use my copy of the image above because the original image became unavailable at the time of writing
+        image: quay.io/junatibm/gie-epp:v20250606-c300d26
         imagePullPolicy: Always
         args:
         - -poolName
