@@ -100,7 +100,9 @@ spec:
         - name: lora-adapter-syncer
           tty: true
           stdin: true 
-          image: us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/lora-syncer:main
+          # image: us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/lora-syncer:v20250920-32970c0
+          # use my copy of the image above before the original image became unavailable
+          image: quay.io/junatibm/gie-lora-syncer:v20250920-32970c0
           restartPolicy: Always
           imagePullPolicy: Always
           env: 
