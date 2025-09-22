@@ -1,8 +1,8 @@
 Sometimes the vLLM container is able to see all GPUs of a node.
 But the reason is not clear yet.
-This experiment finds the reason and present some extra discussions.
+This experiment finds the reason and presents some extra discussions.
 
-I short, the reason is that the vLLM container image has the envar `NVIDIA_VISIBLE_DEVICES=all` baked in.
+In short, the reason is that the vLLM container image has the envar `NVIDIA_VISIBLE_DEVICES=all` baked in.
 
 
 ## When does the vLLM container see all GPUs?
