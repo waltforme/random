@@ -1,7 +1,7 @@
-This document mainly discusses the relationship between the llm-d-fast-model-actuation ('FMA') project and
+This document mainly discusses the relationship between the llm-d-fast-model-actuation ('FMA' for short) project and
 the Kubernetes Gateway API Inference Extension (GIE).
 
-The main question is, whether FMA should be in charge of managing the lifecycle of GIE objects (technically, it's Gateway *and* GIE objects because httproutes' API group is `gateway.networking.k8s.io` and inferencepools' API group is `inference.networking.x-k8s.io`), such as httproutes, inferencepools, and endpoint pickers (EPPs).
+The main question is, whether FMA should be in charge of managing the lifecycle of GIE objects, such as httproutes, inferencepools, and endpoint pickers (EPPs). (Technically, it's Gateway *and* GIE objects because httproutes' API group is `gateway.networking.k8s.io` and inferencepools' API group is `inference.networking.x-k8s.io`)
 
 Some related questions are also discussed.
 
@@ -21,10 +21,10 @@ FMA should not take the responsibility to manage the lifecycle of infrastructure
 So what is the community's common practice to manage the infrastructure?
 Some investigation shows that the answer is helm/helmfile.
 
-- llm-d/llm-d: helmfile
-- llm-d/llm-d-benchmark helmfile
-- llm-d-incubation/llm-d-infra: helmfile
-- llm-d-incubation/llm-d-modelservice: helm
+- [llm-d/llm-d](https://github.com/llm-d/llm-d): helmfile
+- [llm-d/llm-d-benchmark](https://github.com/llm-d/llm-d-benchmark): helmfile
+- [llm-d-incubation/llm-d-infra](https://github.com/llm-d-incubation/llm-d-infra): helmfile
+- [llm-d-incubation/llm-d-modelservice](https://github.com/llm-d-incubation/llm-d-modelservice): helm
 
 Note that in the list above, the setups are minimized in terms of number of models.
 They are minimized because the setups are mostly guides/tutorials/tests, not production deployments.
@@ -32,22 +32,22 @@ What if the number scale out? This question leads to the next discussion.
 
 
 ## Optimization?
-Could there be optimizations of the infrastructure when the number of models increases?
+Could there be optimization to the infrastructure when the number of models increases?
 
 It is commonly seen that there is a 1:1:1 mapping between models, inferencepools, and EPPs.
 Speaking of optimization, does it make sense that
-1. multiple models share one inferencepool?
+1. multiple models share one InferencePool object?
 2. multiple inferencepools share one EPP?
 
-AFAIK, answers to the two questions unfortunately are both 'no', detailed as follows.
+AFAIK, answers to the two questions  are unfortunatelyboth 'no', detailed as follows.
 
 
 ### 1:1 mapping between models and inferencepools
-I did some experiments, trying to make two models to share one inference pool.
+I did some experiments, trying to make two models to share one InferencePool object.
 
-I started from the llm-d/llm-d [guide to 'Intelligent Inference Scheduling'](https://github.com/llm-d/llm-d/tree/main/guides/inference-scheduling).
+I started from the llm-d [guide to 'Intelligent Inference Scheduling'](https://github.com/llm-d/llm-d/tree/main/guides/inference-scheduling).
 
-One InferencePool object was created.
+Following the guide, one InferencePool object was created.
 ```console
 👉 tmp $ oc get xinfpool gaie-inference-scheduling -oyaml | yq .spec
 extensionRef:
@@ -61,7 +61,7 @@ selector:
 targetPortNumber: 8000
 ```
 
-On top of the successfully installation, I manually added another Deployment which serves `ibm-granite/granite-3.3-2b-instruct` by `vllm/vllm-openai:v0.10.2`.
+On top of the successfully installed guide, I manually added another Deployment which serves `ibm-granite/granite-3.3-2b-instruct` by `vllm/vllm-openai:v0.10.2`.
 Then I labeled the corresponding pod to associate the pod with the InferencePool object.
 ```shell
 oc label po gpu-placeholder-76dd8d4c64-mktn8 llm-d.ai/inferenceServing=true
@@ -173,7 +173,7 @@ But the two pods serves different models.
 If an inference request is dispatched to the pod which serves the model that the request asks for, the request is fulfilled.
 Otherwise, a 404 is returned.
 
-To verify that.
+To verify the hypothesis,
 I sent a bunch of (39) inference requests to `Qwen/Qwen3-0.6B`,
 followed by a bunch of (49) inference requests to `ibm-granite/granite-3.3-2b-instruct`,
 and meanwhile watched the logs of both of the vLLM pods.
@@ -284,9 +284,9 @@ A few observations:
 - 46 inference requests were dispatched to the pod which serves `Qwen/Qwen3-0.6B`,
 - 42 inference requests were dispatched to the pod which serves `ibm-granite/granite-3.3-2b-instruct`.
 
-So the hypothesis is confirmed. To repeat the hypothesis:
-If an inference request is dispatched to the pod which serves the model that the request asks for, the request is fulfilled.
-Otherwise, a 404 is returned.
+So the hypothesis is confirmed. To repeat:
+*If an inference request is dispatched to the pod which serves the model that the request asks for, the request is fulfilled.
+Otherwise, a 404 is returned.*
 
 Since inference requests are dispatched to all pods that are associated with an InferencePool object,
 the pods must serve the same model (otherwise 404).
