@@ -280,7 +280,7 @@ Logs of the pod which serves `ibm-granite/granite-3.3-2b-instruct`:
 
 A few observations:
 - 39 requests asked for `Qwen/Qwen3-0.6B`, where 19 were dispatched correctly, 20 were not and (so 404).
-- 49 requests asked for `ibm-granite/granite-3.3-2b-instruct`, where 27 were dispatched correctly, 22 were not (so 404).
+- 49 requests asked for `ibm-granite/granite-3.3-2b-instruct`, where 22 were dispatched correctly, 27 were not (so 404).
 - 46 inference requests were dispatched to the pod which serves `Qwen/Qwen3-0.6B`,
 - 42 inference requests were dispatched to the pod which serves `ibm-granite/granite-3.3-2b-instruct`.
 
