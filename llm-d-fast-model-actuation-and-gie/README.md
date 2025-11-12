@@ -1,4 +1,4 @@
-This document mainly discusses the relationship between the llm-d-fast-model-actuation ('FMA' for short) project and
+This document mainly discusses the relationship between the [llm-d-fast-model-actuation](https://github.com/llm-d-incubation/llm-d-fast-model-actuation) ('FMA' for short) project and
 the Kubernetes Gateway API Inference Extension (GIE).
 
 The main question is, whether FMA should be in charge of managing the lifecycle of GIE objects, such as httproutes, inferencepools, and endpoint pickers (EPPs). (Technically, it's Gateway *and* GIE objects because httproutes' API group is `gateway.networking.k8s.io` and inferencepools' API group is `inference.networking.x-k8s.io`)
@@ -28,7 +28,7 @@ Some investigation shows that the answer is helm/helmfile.
 
 Note that in the list above, the setups are minimized in terms of number of models.
 They are minimized because the setups are mostly guides/tutorials/tests, not production deployments.
-What if the number scale out? This question leads to the next discussion.
+What if the number scales out? This question leads to the next discussion.
 
 
 ## Optimization?
@@ -39,13 +39,13 @@ Speaking of optimization, does it make sense that
 1. multiple models share one InferencePool object?
 2. multiple inferencepools share one EPP?
 
-AFAIK, answers to the two questions  are unfortunatelyboth 'no', detailed as follows.
+AFAIK, answers to the two questions  are unfortunately both 'no', detailed as follows.
 
 
 ### 1:1 mapping between models and inferencepools
 I did some experiments, trying to make two models to share one InferencePool object.
 
-I started from the llm-d [guide to 'Intelligent Inference Scheduling'](https://github.com/llm-d/llm-d/tree/main/guides/inference-scheduling).
+I started from the llm-d [guide](https://github.com/llm-d/llm-d/tree/main/guides/inference-scheduling) to 'Intelligent Inference Scheduling'.
 
 Following the guide, one InferencePool object was created.
 ```console
