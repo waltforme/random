@@ -67,8 +67,15 @@ Maybe the two ranks must be collocated within one pod.
 
 ## Using Kubernetes
 ```shell
-kubectl create -f ./vllm-data-parallelism/deployments.yaml
+kubectl create -f ./vllm-data-parallelism/deployment.yaml
 ```
+
+Check the log of the two ranks:
+```shell
+kubectl logs deploy/vllm-dp -c rank0 -f
+kubectl logs deploy/vllm-dp -c rank1 -f
+```
+
 
 ## References
 - [vLLM doc on 'External Load Balancing'](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/#external-load-balancing)
