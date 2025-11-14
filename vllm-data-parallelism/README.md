@@ -64,7 +64,7 @@ This is similar if I first start rank 1 then start rank 0: Rank 1 waits for rank
 
 ## Using Kubernetes
 ```shell
-kubectl create -f ./vllm-data-parallelism/deployment_rank0.yaml
+kubectl create -f ./vllm-data-parallelism/deployments.yaml
 ```
 
 ## References

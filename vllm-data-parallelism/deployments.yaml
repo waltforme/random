@@ -20,9 +20,10 @@ spec:
         args:
           - "--model"
           - "ibm-granite/granite-3.3-2b-instruct"
-          - "--port"
-          - "8000"
           - "--max-model-len=8192"
+          - "--data-parallel-size=2"
+          - "--data-parallel-rank=0"
+          - "--port=8000"
         env:
         - name: VLLM_SERVER_DEV_MODE
           value: "1"
@@ -75,9 +76,10 @@ spec:
         args:
           - "--model"
           - "ibm-granite/granite-3.3-2b-instruct"
-          - "--port"
-          - "8001"
           - "--max-model-len=8192"
+          - "--data-parallel-size=2"
+          - "--data-parallel-rank=1"
+          - "--port=8001"
         env:
         - name: VLLM_SERVER_DEV_MODE
           value: "1"
