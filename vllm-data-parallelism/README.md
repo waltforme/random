@@ -62,5 +62,10 @@ The log shows that rank 0 waited for roughly 3 minutes, until I started rank 1.
 This is similar if I first start rank 1 then start rank 0: Rank 1 waits for rank 0 as well.
 
 
+## Using Kubernetes
+```shell
+kubectl create -f ./vllm-data-parallelism/deployment_rank0.yaml
+```
+
 ## References
 - [vllm doc on 'External Load Balancing'](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/#external-load-balancing)
