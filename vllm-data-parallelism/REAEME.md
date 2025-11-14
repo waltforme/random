@@ -51,6 +51,7 @@ The log from rank 0 has such a line:
 (APIServer pid=13926) INFO 11-14 17:03:51 [utils.py:625] Started DP Coordinator process (PID: 14168)
 ```
 The log from rank 1 doesn't have such a line.
+This is also true if I first start rank 1 then start rank 0: Rank 0 is in charge of starting the coordinator process.
 
 Rank 0 will be 'Waiting for init message from front-end' as follows:
 ```text
@@ -58,6 +59,7 @@ Rank 0 will be 'Waiting for init message from front-end' as follows:
 (EngineCore_0 pid=14171) INFO 11-14 17:06:45 [core.py:72] Initializing a V1 LLM engine (v0.10.1.dev544+gc90fb03df)...
 ```
 The log shows that rank 0 waited for roughly 3 minutes, until I started rank 1.
+This is similar if I first start rank 1 then start rank 0: Rank 1 waits for rank 0 as well.
 
 
 ## References
