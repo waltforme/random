@@ -57,8 +57,8 @@ Rank 0 will be 'Waiting for init message from front-end' as follows:
 (EngineCore_0 pid=14171) INFO 11-14 17:03:56 [core.py:619] Waiting for init message from front-end.
 (EngineCore_0 pid=14171) INFO 11-14 17:06:45 [core.py:72] Initializing a V1 LLM engine (v0.10.1.dev544+gc90fb03df)...
 ```
-The log shows that rank 0 waited for roughly 3 minutes, until I start rank 1.
+The log shows that rank 0 waited for roughly 3 minutes, until I started rank 1.
 
 
 ## References
-[vllm doc on 'External Load Balancing'](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/#external-load-balancing)
+- [vllm doc on 'External Load Balancing'](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/#external-load-balancing)
