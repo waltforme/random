@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rank0
+  labels:
+    app: rank0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rank0
+  template:
+    metadata:
+      labels:
+        app: rank0
+    spec:
+      containers:
+      - name: vllm
+        image: vllm/vllm-openai:v0.10.2
+        args:
+          - "--model"
+          - "ibm-granite/granite-3.3-2b-instruct"
+          - "--port"
+          - "8000"
+          - "--max-model-len=8192"
+        env:
+        - name: VLLM_SERVER_DEV_MODE
+          value: "1"
+        - name: VLLM_CACHE_ROOT
+          value: /tmp
+        - name: FLASHINFER_WORKSPACE_BASE
+          value: /tmp
+        - name: XDG_CONFIG_HOME
+          value: /tmp
+        - name: TRITON_HOME
+          value: /tmp
+        - name: HF_HOME
+          value: /tmp
+        ports:
+          - containerPort: 8000
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            cpu: "2"
+            memory: "16Gi"
+          requests:
+            cpu: "1"
+            memory: "8Gi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rank1
+  labels:
+    app: rank1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rank1
+  template:
+    metadata:
+      labels:
+        app: rank1
+    spec:
+      containers:
+      - name: vllm
+        image: vllm/vllm-openai:v0.10.2
+        args:
+          - "--model"
+          - "ibm-granite/granite-3.3-2b-instruct"
+          - "--port"
+          - "8001"
+          - "--max-model-len=8192"
+        env:
+        - name: VLLM_SERVER_DEV_MODE
+          value: "1"
+        - name: VLLM_CACHE_ROOT
+          value: /tmp
+        - name: FLASHINFER_WORKSPACE_BASE
+          value: /tmp
+        - name: XDG_CONFIG_HOME
+          value: /tmp
+        - name: TRITON_HOME
+          value: /tmp
+        - name: HF_HOME
+          value: /tmp
+        ports:
+          - containerPort: 8001
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            cpu: "2"
+            memory: "16Gi"
+          requests:
+            cpu: "1"
+            memory: "8Gi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 60
+          periodSeconds: 5
