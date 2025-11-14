@@ -70,11 +70,24 @@ Maybe the two ranks must be collocated within one pod.
 kubectl create -f ./vllm-data-parallelism/deployment.yaml
 ```
 
+Check the GPU assignment of the two ranks by either of the two commands below.
+```shell
+kubectl exec deploy/vllm-dp -c rank0 -- nvidia-smi --query-gpu=index,uuid,memory.used,memory.total --format=csv
+kubectl exec deploy/vllm-dp -c rank1 -- nvidia-smi --query-gpu=index,uuid,memory.used,memory.total --format=csv
+```
+
 Check the log of the two ranks:
 ```shell
 kubectl logs deploy/vllm-dp -c rank0 -f
 kubectl logs deploy/vllm-dp -c rank1 -f
 ```
+
+I got errors from nccl. So I set
+```yaml
+        - name: NCCL_DEBUG
+          value: INFO
+```
+for both the containers to inspect.
 
 
 ## References

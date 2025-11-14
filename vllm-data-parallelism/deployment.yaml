@@ -24,6 +24,8 @@ spec:
           - "--data-parallel-rank=0"
           - "--port=8000"
         env:
+        - name: NCCL_DEBUG
+          value: INFO
         - name: CUDA_VISIBLE_DEVICES
           value: "0"
         - name: VLLM_SERVER_DEV_MODE
@@ -62,6 +64,8 @@ spec:
           - "--data-parallel-rank=1"
           - "--port=8001"
         env:
+        - name: NCCL_DEBUG
+          value: INFO
         - name: CUDA_VISIBLE_DEVICES
           value: "1"
         - name: VLLM_SERVER_DEV_MODE
