@@ -1,25 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rank0
+  name: vllm-dp
   labels:
-    app: rank0
+    app: vllm-dp
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: rank0
+      app: vllm-dp
   template:
     metadata:
       labels:
-        app: rank0
+        app: vllm-dp
     spec:
       containers:
-      - name: vllm
+      - name: rank0
         image: vllm/vllm-openai:v0.10.2
         args:
-          - "--model"
-          - "ibm-granite/granite-3.3-2b-instruct"
+          - "--model=ibm-granite/granite-3.3-2b-instruct"
           - "--max-model-len=8192"
           - "--data-parallel-size=2"
           - "--data-parallel-rank=0"
@@ -53,29 +52,10 @@ spec:
             port: 8000
           initialDelaySeconds: 60
           periodSeconds: 5
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rank1
-  labels:
-    app: rank1
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: rank1
-  template:
-    metadata:
-      labels:
-        app: rank1
-    spec:
-      containers:
-      - name: vllm
+      - name: rank1
         image: vllm/vllm-openai:v0.10.2
         args:
-          - "--model"
-          - "ibm-granite/granite-3.3-2b-instruct"
+          - "--model=ibm-granite/granite-3.3-2b-instruct"
           - "--max-model-len=8192"
           - "--data-parallel-size=2"
           - "--data-parallel-rank=1"

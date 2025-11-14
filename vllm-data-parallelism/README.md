@@ -45,13 +45,13 @@ curl -s localhost:8001/v1/completions -H "Content-Type: application/json" \
 ```
 
 
-### Observations
+### Observation and Question
 The log from rank 0 has such a line:
 ```text
 (APIServer pid=13926) INFO 11-14 17:03:51 [utils.py:625] Started DP Coordinator process (PID: 14168)
 ```
 The log from rank 1 doesn't have such a line.
-This is also true if I first start rank 1 then start rank 0: Rank 0 is in charge of starting the coordinator process.
+This is also true if I first start rank 1 then start rank 0: Rank 0 is in charge of starting the 'coordinator process'.
 
 Rank 0 will be 'Waiting for init message from front-end' as follows:
 ```text
@@ -61,6 +61,9 @@ Rank 0 will be 'Waiting for init message from front-end' as follows:
 The log shows that rank 0 waited for roughly 3 minutes, until I started rank 1.
 This is similar if I first start rank 1 then start rank 0: Rank 1 waits for rank 0 as well.
 
+The question is, how could the 'coordinator process' coordinate two ranks on Kubernetes?
+Maybe the two ranks must be collocated within one pod.
+
 
 ## Using Kubernetes
 ```shell
@@ -68,4 +71,4 @@ kubectl create -f ./vllm-data-parallelism/deployments.yaml
 ```
 
 ## References
-- [vllm doc on 'External Load Balancing'](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/#external-load-balancing)
+- [vLLM doc on 'External Load Balancing'](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/#external-load-balancing)
