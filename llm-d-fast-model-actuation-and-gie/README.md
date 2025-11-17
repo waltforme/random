@@ -10,15 +10,28 @@ The main questions are:
 Some related questions are also discussed.
 
 ## Answer to the 1st question
-No.
+Generally, no.
 
 As a rule of thumb, infrastructure and workload should be managed separately.
-In the context of llm-d, GIE objects are infrastructure, and the vLLM instances are workloads.
+From FMA's point of view, GIE objects are infrastructure, and the vLLM instances are workloads.
 
 FMA's interest, as its name suggests, is primarily about
 speeding up the start of vLLM engines using whatever available technology with the constraint of limited GPUs.
-Therefore, FMA's scope is about managing workloads.
-FMA should not take the responsibility to manage the lifecycle of infrastructure objects.
+Therefore, FMA's scope is about managing vLLM instances.
+FMA should not take the responsibility to manage the lifecycle of GIE objects.
+
+It's 'generally' no, because *how* to define the 'infrastructure' and the 'workload' is a question with different answers.
+In GIE's view of [Roles and Personas](https://gateway-api-inference-extension.sigs.k8s.io/concepts/roles-and-personas/),
+the 'Inference Platform Admin' do the Ops of both 'Model Server' and 'Gateway configuration'.
+```txt
++---------------------------+
+|        inferencing        |
++---------------------------+ <- GIE separates (roughly) here
+|      vLLM instances       |
++---------------------------+ <- FMA separates here
+|        GIE objects        |
++---------------------------+
+```
 
 ## Answer to the 2nd question
 No.
