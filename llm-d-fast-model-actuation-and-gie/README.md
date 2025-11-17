@@ -1,24 +1,48 @@
 This document mainly discusses the relationship between the [llm-d-fast-model-actuation](https://github.com/llm-d-incubation/llm-d-fast-model-actuation) ('FMA' for short) project and
 the Kubernetes Gateway API Inference Extension (GIE).
 
-The main question is, whether FMA should be in charge of managing the lifecycle of GIE objects, such as httproutes, inferencepools, and endpoint pickers (EPPs). (Technically, it's Gateway *and* GIE objects because httproutes' API group is `gateway.networking.k8s.io` and inferencepools' API group is `inference.networking.x-k8s.io`)
+The main questions are:
+1. whether FMA should be in charge of managing the lifecycle of GIE objects, such as httproutes, inferencepools, and endpoint pickers (EPPs).
+  (Technically, it's Gateway *and* GIE objects because httproutes' API group is `gateway.networking.k8s.io` and inferencepools' API group is `inference.networking.x-k8s.io`)
+2. Are there collisions/overlapped functions between the FMA's dual-pods controller (dpctlr) and the EPP?
+
 
 Some related questions are also discussed.
 
-## The short answer
-Generally, no.
+## Answer to the 1st question
+No.
 
 As a rule of thumb, infrastructure and workload should be managed separately.
 In the context of llm-d, GIE objects are infrastructure, and the vLLM instances are workloads.
 
-FMA's interest, as its name suggests, is primarily about speeding up the start of vLLM engines.
-Or more concretely, minimizing TTFT using whatever available technology with the constraint of limited GPUs.
+FMA's interest, as its name suggests, is primarily about
+speeding up the start of vLLM engines using whatever available technology with the constraint of limited GPUs.
 Therefore, FMA's scope is about managing workloads.
 FMA should not take the responsibility to manage the lifecycle of infrastructure objects.
 
+## Answer to the 2nd question
+No.
 
-## The long answer
-So what is the community's common practice to manage the infrastructure?
+For any given model, both the dpctlr and the EPP concern about some optimization for that model.
+But the concerns are disjoint because they two play different roles from the inference servers' point of view.
+As a result, they work on different phases in terms of inference servers' lifecycles.
+Here an 'inference server' and a vLLM instance are equivalent.
+
+The dpctlr creates (and less importantly, deletes) vLLM instances for the model.
+The EPP, OTOH, consumes the vLLM instances.
+If vLLM instances are commodities, the dpctlr is the producer and the EPP is the consumer.
+
+The dpctlr works mainly on the start of a vLLM instance's lifecycle.
+The EPP works during a vLLM instance's lifecycle whenever the instance is ready to serve inference requests.
+
+They both different optimization goals.
+The dpctlr minimizes the start of vLLM instances.
+The EPP could have different optimization goals,
+[e.g. best cost / best performance](https://gateway-api-inference-extension.sigs.k8s.io/)
+for an inference request.
+
+## More questions related to the 1st
+What is the community's common practice to manage the infrastructure?
 Some investigation shows that the answer is helm/helmfile.
 
 - [llm-d/llm-d](https://github.com/llm-d/llm-d): helmfile
@@ -28,19 +52,15 @@ Some investigation shows that the answer is helm/helmfile.
 
 Note that in the list above, the setups are minimized in terms of number of models.
 They are minimized because the setups are mostly guides/tutorials/tests, not production deployments.
-What if the number scales out? This question leads to the next discussion.
-
-
-## Optimization?
-Could there be optimization to the infrastructure when the number of models increases?
+What if the number scales out?
+In other words, could there be optimization to the infrastructure when the number of models increases?
 
 It is commonly seen that there is a 1:1:1 mapping between models, inferencepools, and EPPs.
 Speaking of optimization, does it make sense that
-1. multiple models share one InferencePool object?
-2. multiple inferencepools share one EPP?
+- multiple models share one InferencePool object?
+- multiple inferencepools share one EPP?
 
-AFAIK, answers to the two questions  are unfortunately both 'no', detailed as follows.
-
+AFAIK, answers to the two questions are unfortunately both 'no', detailed as follows.
 
 ### 1:1 mapping between models and inferencepools
 I did some experiments, trying to make two models to share one InferencePool object.
@@ -374,8 +394,3 @@ https://github.com/kubernetes-sigs/gateway-api-inference-extension/blob/7488c2b0
 https://github.com/kubernetes-sigs/gateway-api-inference-extension/blob/7488c2b0b3a43e28fc7bd684256d67ce848fda28/cmd/epp/runner/runner.go#L244-L258
 
 So, multiple InferencePool objects can not share an EPP pod (thus 1:1).
-
-
-## Are there collisions/overlapped functions between the dpctlr and the EPP?
-This question concerns about the optimization within a model.
-Writing to be finished.
