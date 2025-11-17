@@ -2,7 +2,7 @@ This document mainly discusses the relationship between the [llm-d-fast-model-ac
 the Kubernetes Gateway API Inference Extension (GIE).
 
 The main questions are:
-1. whether FMA should be in charge of managing the lifecycle of GIE objects, such as httproutes, inferencepools, and endpoint pickers (EPPs).
+1. Should FMA be in charge of managing the lifecycle of GIE objects, such as httproutes, inferencepools, and endpoint pickers (EPPs)?
   (Technically, it's Gateway *and* GIE objects because httproutes' API group is `gateway.networking.k8s.io` and inferencepools' API group is `inference.networking.x-k8s.io`)
 2. Are there collisions/overlapped functions between the FMA's dual-pods controller (dpctlr) and the EPP?
 
