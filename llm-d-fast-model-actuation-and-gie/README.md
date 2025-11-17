@@ -48,7 +48,7 @@ If vLLM instances are commodities, the dpctlr is the producer and the EPP is the
 The dpctlr works mainly on the start of a vLLM instance's lifecycle.
 The EPP works during a vLLM instance's lifecycle whenever the instance is ready to serve inference requests.
 
-They both different optimization goals.
+Speaking of optimization goals:
 The dpctlr minimizes the start of vLLM instances.
 The EPP could have different optimization goals,
 [e.g. best cost / best performance](https://gateway-api-inference-extension.sigs.k8s.io/)
