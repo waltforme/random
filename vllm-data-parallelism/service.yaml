@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-dp0
+spec:
+  selector:
+    app: vllm-dp0
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+    - name: coordinator
+      protocol: TCP
+      port: 13345
+      targetPort: 13345

@@ -1,27 +1,32 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vllm-dp
+  name: vllm-dp0
   labels:
-    app: vllm-dp
+    app: vllm-dp0
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: vllm-dp
+      app: vllm-dp0
   template:
     metadata:
       labels:
-        app: vllm-dp
+        app: vllm-dp0
     spec:
       containers:
-      - name: rank0
+      - name: vllm
         image: vllm/vllm-openai:v0.10.2
-        args:
+        command:
+          - vllm
+          - serve
           - "--model=ibm-granite/granite-3.3-2b-instruct"
           - "--max-model-len=8192"
           - "--data-parallel-size=2"
           - "--data-parallel-rank=0"
+          - "--data-parallel-address=0.0.0.0"
+          - "--data-parallel-rpc-port=13345"
           - "--port=8000"
         env:
         - name: NCCL_DEBUG
@@ -42,6 +47,7 @@ spec:
           value: /tmp
         ports:
           - containerPort: 8000
+          - containerPort: 13345
         resources:
           limits:
             cpu: "2"
@@ -55,13 +61,37 @@ spec:
             port: 8000
           initialDelaySeconds: 60
           periodSeconds: 5
-      - name: rank1
+  strategy:
+    type: Recreate
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-dp1
+  labels:
+    app: vllm-dp1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-dp1
+  template:
+    metadata:
+      labels:
+        app: vllm-dp1
+    spec:
+      containers:
+      - name: vllm
         image: vllm/vllm-openai:v0.10.2
-        args:
+        command:
+          - vllm
+          - serve
           - "--model=ibm-granite/granite-3.3-2b-instruct"
           - "--max-model-len=8192"
           - "--data-parallel-size=2"
           - "--data-parallel-rank=1"
+          - "--data-parallel-address=10.101.21.189"
+          - "--data-parallel-rpc-port=13345"
           - "--port=8001"
         env:
         - name: NCCL_DEBUG

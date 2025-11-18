@@ -89,6 +89,13 @@ I got errors from nccl. So I set
 ```
 for both the containers to inspect.
 
+I got
+```text
+(EngineCore_DP0 pid=208) INFO 11-18 11:51:23 [core.py:654] Waiting for init message from front-end.
+```
+for both the containers so I tried to ask my question in the community.
+https://vllm-dev.slack.com/archives/C07QP347J4D/p1763489790198549
+
 
 ## References
 - [vLLM doc on 'External Load Balancing'](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/#external-load-balancing)
