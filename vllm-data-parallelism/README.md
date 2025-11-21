@@ -79,3 +79,4 @@ kubectl logs deploy/vllm-dp -c rank1 -f
 
 ## References
 - [vLLM doc on 'External Load Balancing'](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/#external-load-balancing)
+- [Support for vLLM Data parallel](https://github.com/kubernetes-sigs/gateway-api-inference-extension/pull/1663)
