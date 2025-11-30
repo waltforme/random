@@ -242,7 +242,10 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
 ```
 The fields have two managers, `jun` (operation: Apply) and `jun-apply-again` (operation: Apply).
 Comparing the two managers, we can tell their managed fields are identical --- all the fields of the object.
-The second manager somehow doesn't show `time`. Is it a bug? Will dig into it later.
+The second manager somehow doesn't show `time`.
+I think it is a bug. So I filed [an Issue](https://github.com/kubernetes/kubernetes/issues/127938)
+and submitted [a PR](https://github.com/kubernetes/kubernetes/pull/127939).
+But I didn't have enough bandwidth to follow up the review comments afterwards.
 
 The only difference between `nginx-0930.yaml` and `nginx-0930-stable.yaml` is the image tag.
 We are going to use `nginx-0930-stable.yaml` in the next step.
