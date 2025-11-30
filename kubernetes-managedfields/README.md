@@ -26,6 +26,9 @@ Experiment shows that this operation results in co-ownership of a field by setti
 
 Details are documented [here](./apply_HTTP-PATCH.md).
 
+I also tried to fix a related bug but I didn't have enough bandwidth to follow up the review comments afterwards.
+Details are also documented [here](./apply_HTTP-PATCH.md).
+
 ### Update (HTTP PUT)
 Experiment shows that this operation doesn't change the owner of a field by setting the same value.
 
