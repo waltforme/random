@@ -96,6 +96,12 @@ I got
 for both the containers so I tried to ask my question in the community.
 https://vllm-dev.slack.com/archives/C07QP347J4D/p1763489790198549
 
+Also, I read about
+```text
+For MoE models, particularly those like DeepSeek that employ MLA (Multi-head Latent Attention), it can be advantageous to use data parallel for the attention layers and expert or tensor parallel (EP or TP) for the expert layers.
+```
+in [vLLM doc](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/),
+so the usage of the targetPorts is different, from the data parallelism use case and the expert or tensor parallelism use case.
 
 ## References
 - [vLLM doc on 'External Load Balancing'](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/#external-load-balancing)
