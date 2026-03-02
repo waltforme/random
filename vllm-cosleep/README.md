@@ -163,7 +163,7 @@ If the 1st Deployment exists, even asleep, then the 2nd Deployment can't be sche
 1m38s       Warning   FailedScheduling   Pod/gpt2-5965c886db-vj847   0/1 nodes are available: 1 Insufficient nvidia.com/gpu. preemption: 0/1 nodes are available: 1 No preemption victims found for incoming pod.
 ```
 So conclusion is that two vLLM Kubernetes Deployments can't simultaneously use one GPU.
-At lease in the absence of any GPU sharing technologies.
+At least in the absence of any GPU sharing technologies.
 
 ### Commands for bare process
 

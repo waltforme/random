@@ -1,6 +1,6 @@
 In the [previous experiment](./grpc_call_from_kubelet_to_container-runtime.md), I saw two instances of the `NVIDIA_VISIBLE_DEVICES` envar in `ContainerConfig` that is passed from the kubelet to the container runtime.
 
-Natually, a question is: Which instance is respected? This experiment answers the question.
+Naturally, a question is: Which instance is respected? This experiment answers the question.
 The short answer is: Whichever appears lastly in the envar list is respected by nvidia container toolkit, specifically `nvidia-container-cli`; the one appears firstly is ignored by `nvidia-container-cli`.
 
 On top of that, this experiment also confirms that the `nvidia-container-cli` can assign GPUs independently from the kubelet.
@@ -9,7 +9,7 @@ On top of that, this experiment also confirms that the `nvidia-container-cli` ca
 I wrote a helper function to swap the two instances of the envar.
 ```go
 func swapTheTwoEnvarsInContainerConfig(cfg *runtimeapi.ContainerConfig) {
-	// there are two instances of NVIDIA_VISIBLE_DEVICES envars intead of one, because
+	// there are two instances of NVIDIA_VISIBLE_DEVICES envars instead of one, because
 	// the kubelet injected the first one when handling Container.Resources
 	// and a human wrote the second one in Container.Env
 	indice := []int{}

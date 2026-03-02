@@ -4,7 +4,7 @@ then demonstrates a grayscale release of models using the Inference Extension.
 
 The experiment is based on this [article](https://mp.weixin.qq.com/s/WflalqTE0c-_mYUsEmMiRA).
 The YAML files used in this experiments are based on [these](https://github.com/cr7258/hands-on-lab/tree/414445dfd2ab58a7310bd385f2bbf13dca1d76a3/gateway/gateway-api-inference-extension/get-started).
-I didn't fork that repostory because it's too large and it has many other contents that are not related to this experiment.
+I didn't fork that repository because it's too large and it has many other contents that are not related to this experiment.
 I made some changes to the YAML files to fix minor mistakes and to fit it into my tiny testbed.
 
 The hardware used by this experiment is an AWS EC2 instance of type g6.4xlarge, which has a nVidia L4 GPU.
@@ -62,7 +62,7 @@ by following [k8s doc](https://gateway-api.sigs.k8s.io/guides/#installing-gatewa
     kubectl create -f ./kubernetes-gateway-api-inference-extension/04-gateway.yaml
     ```
 
-    After creation of the Gateway `inference-gateway`, a Depolyment also named `inference-gateway` is created by kgateway.
+    After creation of the Gateway `inference-gateway`, a Deployment also named `inference-gateway` is created by kgateway.
     The Deployment has a owner reference to the Gateway.
     ```console
     {"level":"info","ts":"2025-06-09T16:19:28Z","logger":"kgateway","msg":"reconciling gateway","version":"v2.0.0","controller":"gateway","controllerGroup":"gateway.networking.k8s.io","controllerKind":"Gateway","Gateway":{"name":"inference-gateway","namespace":"default"},"namespace":"default","name":"inference-gateway","reconcileID":"d86cff55-0ad4-459d-9bd6-6ade72e9db6a","gw":{"name":"inference-gateway","namespace":"default"}}

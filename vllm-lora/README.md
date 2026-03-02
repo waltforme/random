@@ -193,7 +193,7 @@ kind delete cluster --name lora
 
 ### Local Python Run without Kubernetes
 LoRA adapters can be statically loaded at the beginning, or dynamically loaded/unloaded at runtime.
-As long as files for the adapters are saved somewhere before hand.
+As long as files for the adapters are saved somewhere beforehand.
 
 Statically loaded at the beginning.
 ```shell

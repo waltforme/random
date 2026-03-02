@@ -1,4 +1,4 @@
-Create a Deploymet object by `kubectl apply --server-side` using `nginx-0930.yaml`.
+Create a Deployment object by `kubectl apply --server-side` using `nginx-0930.yaml`.
 ```console
 kubectl apply --server-side --field-manager jun -f nginx-0930.yaml -v 8
 I1002 17:07:58.555101 2639457 loader.go:373] Config loaded from file:  /home/ubuntu/debug/kubernetes/general/mypki/admin.kubeconfig
@@ -246,7 +246,7 @@ deployment.apps "nginx-0930" deleted
 ```
 
 This experiment can also be done in a slightly different way in the first step.
-In the first step, we do `kubectl create` to create the Deploymet object, instead of `kubectl apply --server-side`.
+In the first step, we do `kubectl create` to create the Deployment object, instead of `kubectl apply --server-side`.
 ```console
 kubectl create -f nginx-0930.yaml -v 8
 I1002 17:19:44.521165 2649278 loader.go:373] Config loaded from file:  /home/ubuntu/debug/kubernetes/general/mypki/admin.kubeconfig
@@ -478,7 +478,7 @@ kubectl get deploy nginx-0930 -oyaml --show-managed-fields | yq .metadata.manage
   time: "2024-10-02T17:25:00Z"
 ```
 The fields have two managers, `kubectl-create` (operation: Update) and `kubectl-replace` (operation: Update).
-We can see the manager `kubectl-replace` exclusively owns the 'image' field (ownership taken from `kubecctl-create`), but doesn't own any other fields.
+We can see the manager `kubectl-replace` exclusively owns the 'image' field (ownership taken from `kubectl-create`), but doesn't own any other fields.
 
 Delete the object.
 ```console

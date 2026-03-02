@@ -1,8 +1,8 @@
-In our recent LLM inferencing use case, we tried to assign a specific set of GPUs to vLLM, instead of merely assign 'how many' GPUs.
+In our recent LLM inferencing use case, we tried to assign a specific set of GPUs to vLLM, instead of merely assigning 'how many' GPUs.
 We tried to use the `NVIDIA_VISIBLE_DEVICES` environment variable in the `PodSpec.Container.Env` of vLLM Deployment to achieve the goal.
-But the running vLLM container usually saw more GPU than we specified by `NVIDIA_VISIBLE_DEVICES`.
+But the running vLLM container usually saw more GPUs than we specified by `NVIDIA_VISIBLE_DEVICES`.
 
-This short experiment explains why the actually seen GPUs are inconsistent with what specified by `NVIDIA_VISIBLE_DEVICES`.
+This short experiment explains why the actually seen GPUs are inconsistent with what is specified by `NVIDIA_VISIBLE_DEVICES`.
 
 **The root cause of the inconsistency is that the device plugin consumes `PodSpec.Container.Resources` and accordingly recommends an allocation to the kubelet,
 then both the `PodSpec.Container.Env` specified GPUs and the `PodSpec.Container.Resources`-based allocation are honored.**
@@ -18,7 +18,7 @@ index, uuid, memory.used [MiB]
 ```
 
 A vLLM pod specified GPU 1 by the `NVIDIA_VISIBLE_DEVICES` environment variable in its `PodSpec.Container.Env`.
-```consolev
+```console
 $ kc get deploy ubkn3zm1o6-granite-3-2-2b-instruct-deployment-vllm -o jsonpath='{range .spec.template.spec.containers[*].env[*]}{.name}={.value}{"\n"}{end}'
 HF_HOME=/tmp
 POD_IP=
@@ -36,7 +36,7 @@ index, uuid, memory.used [MiB]
 1, GPU-3d75cdd5-2ceb-76a5-8462-d3c24394fdcd, 3 MiB
 ```
 
-Mdified kubelet unveils that the extra GPU was recommended by the device plugin and adopted by kubelet.
+Modified kubelet unveils that the extra GPU was recommended by the device plugin and adopted by kubelet.
 ```text
 MyDebug(show PreferredAllocationResponse): &PreferredAllocationResponse{ContainerResponses:[]*ContainerPreferredAllocationResponse{&ContainerPreferredAllocationResponse{DeviceIDs:[GPU-d7082db6-9ee4-f65a-bf86-3319f528ba4d],},},}
 MyDebug(show allocDevices): map[GPU-d7082db6-9ee4-f65a-bf86-3319f528ba4d:{}]
@@ -44,7 +44,7 @@ MyDebug(show AllocateResponse): &AllocateResponse{ContainerResponses:[]*Containe
 ```
 
 Why the inconsistency exists:
-- vLLM Pod specifed GPU 1;
+- vLLM Pod specified GPU 1;
 - device plugin recommended GPU 0;
 - kubelet allocated GPU 0;
 - both GPUs were made accessible for the vLLM container;
@@ -107,10 +107,10 @@ Why device plugin was not involved again? Let's look at a kubelet code snippet a
                 needed := int(v.Value())
 ```
 
-As commented, there might be some oppotunity here to contribute a feature to define/reconcile the relationship between
+As commented, there might be some opportunity here to contribute a feature to define/reconcile the relationship between
 - the user specified `NVIDIA_VISIBLE_DEVICES` in `PodSpec.Container.Env`, and
-- the user specified requests and limits for 'nvdia.com/gpu' in `PodSpec.Container.Resources`,
+- the user specified requests and limits for 'nvidia.com/gpu' in `PodSpec.Container.Resources`,
 
 so that more fine-grained control --- assigning a specific set of GPUs --- can be offered to the user.
 
-I'm not sure where the contribution should go though. Going into kubelet sounds like a violation of modularity. Maybe into the consumer of the kubelet-processed PodSpec which sould be nvidia container runtime?
+I'm not sure where the contribution should go though. Going into kubelet sounds like a violation of modularity. Maybe into the consumer of the kubelet-processed PodSpec which should be nvidia container runtime?

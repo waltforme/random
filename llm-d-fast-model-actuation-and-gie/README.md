@@ -202,7 +202,7 @@ and got mixed responses of 404 and correct completions.
 
 Here is the hypothesis.
 My inference requests are dispatched to the two vLLM pods because both pods are associated with the InferencePool object.
-But the two pods serves different models.
+But the two pods serve different models.
 If an inference request is dispatched to the pod which serves the model that the request asks for, the request is fulfilled.
 Otherwise, a 404 is returned.
 
@@ -396,7 +396,7 @@ I checked one EPP pod:
       readOnly: true
 ```
 
-I see an EPP container ties itself to exactly one InferencePool object by specifiying the namespace and name of that object.
+I see an EPP container ties itself to exactly one InferencePool object by specifying the namespace and name of that object.
 In other words, the EPP container can't handle more than one InferencePool object.
 
 To double check, I checked the EPP's code see that

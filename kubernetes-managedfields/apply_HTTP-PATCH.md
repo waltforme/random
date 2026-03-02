@@ -1,4 +1,4 @@
-Create a Deploymet object by `kubectl apply --server-side` using `nginx-0930.yaml`.
+Create a Deployment object by `kubectl apply --server-side` using `nginx-0930.yaml`.
 ```console
 kubectl apply --server-side --field-manager jun -f nginx-0930.yaml -v 8
 I1001 21:53:28.471015 2259008 loader.go:373] Config loaded from file:  /home/ubuntu/debug/kubernetes/managedfields/mypki/admin.kubeconfig

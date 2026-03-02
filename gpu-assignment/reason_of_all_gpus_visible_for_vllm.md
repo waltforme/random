@@ -20,7 +20,7 @@ nvidia-containe  29559  29557    0 /usr/local/nvidia/toolkit/nvidia-container-cl
 Let me verify that as follows.
 
 
-## Change the vLLM container image by setting `NVIDIA_VISIBLE_DEVICES` to emtpy
+## Change the vLLM container image by setting `NVIDIA_VISIBLE_DEVICES` to empty
 Confirm the value of `NVIDIA_VISIBLE_DEVICES` envar is `all` in the vLLM container image.
 ```console
 $ docker inspect vllm/vllm-openai:v0.8.5 | jq '.[0].Config.Env'
@@ -83,7 +83,7 @@ $ docker inspect vllm-empty-nvd:latest | jq '.[0].Config.Env' | grep VISIBLE
 ```
 
 Now keep the two conditions in [When does the vLLM container see all GPUs?](#when-does-the-vllm-container-see-all-gpus) met, but try to use this modified image.
-Here is my observations.
+Here are my observations.
 - `docker inspect` shows that `NVIDIA_VISIBLE_DEVICES=` for the vLLM container.
 - The vLLM pod keeps crashing and says `[__init__.py:243] No platform detected, vLLM is running on UnspecifiedPlatform`.
 - `nvidia-smi` is not available in the container. I got `OCI runtime exec failed: exec failed: unable to start container process: exec: "nvidia-smi": executable file not found in $PATH: unknown`.

@@ -1,6 +1,6 @@
 To better understand the GPU assignment procedure, I checked the gRPC call from the kubelet to the container runtime. 
 
-I added additional logging to the kubelet source to show the `ContainerConfig` that consumed by the `CreateContainer` gPRC call, which is [part of the interface](https://github.com/kubernetes/kubernetes/blob/69e56f33ca11dd60faf1bf8b3893d3102b9270a1/staging/src/k8s.io/cri-api/pkg/apis/services.go#L36) between the kubelet and the container runtime.
+I added additional logging to the kubelet source to show the `ContainerConfig` that is consumed by the `CreateContainer` gRPC call, which is [part of the interface](https://github.com/kubernetes/kubernetes/blob/69e56f33ca11dd60faf1bf8b3893d3102b9270a1/staging/src/k8s.io/cri-api/pkg/apis/services.go#L36) between the kubelet and the container runtime.
 
 ## Two instances of the `NVIDIA_VISIBLE_DEVICES` envar
 
@@ -38,7 +38,7 @@ Zoom into the head of `ContainerConfig.Envs`:
 I tried to specify null values, i.e. delete `nvidia.com/gpu` from `PodSpec.Container.Resources`.
 I also tried to specify zero values, i.e. set `nvidia.com/gpu: "0"` in `PodSpec.Container.Resources`.
 
-I didn't find differences between these two cases when I was observing the `ContainerConfig` that consumed by the gRPC call. So I will treat them as one case 'null/zero' in this section.
+I didn't find differences between these two cases when I was observing the `ContainerConfig` that is consumed by the gRPC call. So I will treat them as one case 'null/zero' in this section.
 
 For the 'null/zero' case:
 - The 1st instance of the `NVIDIA_VISIBLE_DEVICES` envar disappears from `ContainerConfig.Envs`;
@@ -68,7 +68,7 @@ The nvidia container cli is called by the nvidia container runtime hook.
 
 One line of [nvidia container runtime code](https://github.com/NVIDIA/nvidia-container-toolkit/blob/08b3a388e7b1d447e10d4c4d4a71dca29a98a964/cmd/nvidia-container-runtime/README.md?plain=1#L91) says:
 
-> Each environment variable maps to an command-line argument...
+> Each environment variable maps to a command-line argument...
 
 OK 'each' envar and yes I [tried](https://github.com/NVIDIA/nvidia-container-toolkit/pull/1257) to fix the typo.
 But what happens if there are two *instances* of *one* `NVIDIA_VISIBLE_DEVICES` envar?
