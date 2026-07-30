@@ -1,0 +1,243 @@
+👉 Downloads $ ssh exp
+
+ System information as of Thu Jul 30 17:26:27 EDT 2026
+
+  System load:  0.07                Temperature:              -0.1 C
+  Usage of /:   86.2% of 246.94GB   Processes:                309
+  Memory usage: 3%                  Users logged in:          1
+  Swap usage:   0%                  IPv4 address for enp39s0: 172.31.58.228
+
+  => / is using 86.2% of 246.94GB
+
+Expanded Security Maintenance for Applications is not enabled.
+
+202 updates can be applied immediately.
+3 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+6 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+
+*** System restart required ***
+Last login: Thu Jul 30 17:24:51 2026 from 129.41.87.3
+ubuntu@ip-172-31-58-228:~/vllm$ git log -1
+commit 2d420a417df625018d3c641df76b43077b1d14a3 (HEAD -> try-cuda-checkpoint)
+Author: Jun Duan <jun.duan.phd@outlook.com>
+Date:   Thu Jul 30 17:23:15 2026 -0400
+
+    Fix symbols to match NVIDIA driver exposed ones
+    
+    Signed-off-by: Jun Duan <jun.duan.phd@outlook.com>
+ubuntu@ip-172-31-58-228:~/vllm$ git merge-base --is-ancestor \
+  2d420a417df625018d3c641df76b43077b1d14a3 HEAD
+ubuntu@ip-172-31-58-228:~/vllm$ echo $?
+0
+ubuntu@ip-172-31-58-228:~/vllm$ git log --oneline -6
+2d420a417d (HEAD -> try-cuda-checkpoint) Fix symbols to match NVIDIA driver exposed ones
+bccb0e453d Merge commit 'refs/pull/37925/head' of https://github.com/vllm-project/vllm into try-cuda-checkpoint
+a3143c4152 [Core] Validate suspend mode at API boundary
+346ebcfd55 [Core] CUDA Checkpoint/Restore — Phase 2: Engine/Executor/API Integration
+e1103cc231 [Core] Make dlopen fallback more robust for libcuda.so
+b3edf07de8 Cuda checkpoint Phase1
+ubuntu@ip-172-31-58-228:~/vllm$ source .venv/bin/activate
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ pip show vllm
+WARNING: Package(s) not found: vllm
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ pip3 show vllm
+WARNING: Package(s) not found: vllm
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ uv pip install pytest pytest-asyncio tblib
+Checked 3 packages in 9ms
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --fail --silent --show-error http://localhost:8000/health
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --fail --silent --show-error http://localhost:8000/is_suspended
+{"is_suspended":false}(vllm) ubuntu@ip-172-31-58-228:~/vllm$ 
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --silent --show-error --output /dev/null \
+  --write-out 'invalid mode: HTTP %{http_code}\n' \
+  --request POST 'http://localhost:8000/suspend?mode=invalid'
+invalid mode: HTTP 400
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --fail --silent --show-error \
+  http://localhost:8000/v1/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "checkpoint-test",
+    "prompt": "The capital of France is",
+    "max_tokens": 8,
+    "temperature": 0
+  }' > /tmp/cuda-checkpoint-before.json
+
+.venv/bin/python -m json.tool /tmp/cuda-checkpoint-before.json
+{
+    "id": "cmpl-97b7335aea0989b3",
+    "object": "text_completion",
+    "created": 1785447468,
+    "model": "checkpoint-test",
+    "choices": [
+        {
+            "index": 0,
+            "text": " the capital of the French Republic.\n",
+            "logprobs": null,
+            "finish_reason": "length",
+            "stop_reason": null,
+            "token_ids": null,
+            "prompt_logprobs": null,
+            "prompt_token_ids": null
+        }
+    ],
+    "service_tier": null,
+    "system_fingerprint": null,
+    "usage": {
+        "prompt_tokens": 6,
+        "total_tokens": 14,
+        "completion_tokens": 8,
+        "prompt_tokens_details": null
+    },
+    "kv_transfer_params": null
+}
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ nvidia-smi
+Thu Jul 30 17:38:08 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L4                      Off |   00000000:35:00.0 Off |                    0 |
+| N/A   48C    P0             28W /   72W |    5899MiB /  23034MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A          861316      C   VLLM::EngineCore                       5890MiB |
++-----------------------------------------------------------------------------------------+
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --fail --silent --show-error --output /dev/null \
+  --write-out 'suspend: HTTP %{http_code}, %{time_total}s\n' \
+  --request POST 'http://localhost:8000/suspend?mode=abort'
+
+curl --fail --silent --show-error http://localhost:8000/is_suspended
+suspend: HTTP 200, 2.572737s
+{"is_suspended":true}(vllm) ubuntu@ip-172-31-58-228:~/vllm$ 
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --fail --silent --show-error --output /dev/null \
+  --write-out 'resume: HTTP %{http_code}, %{time_total}s\n' \
+  --request POST http://localhost:8000/resume
+
+curl --fail --silent --show-error http://localhost:8000/is_suspended
+resume: HTTP 200, 1.099719s
+{"is_suspended":false}(vllm) ubuntu@ip-172-31-58-228:~/vllm$ 
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --fail --silent --show-error \
+  http://localhost:8000/v1/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "checkpoint-test",
+    "prompt": "The capital of France is",
+    "max_tokens": 8,
+    "temperature": 0
+  }' > /tmp/cuda-checkpoint-after.json
+
+.venv/bin/python - <<'PY'
+import json
+
+with open("/tmp/cuda-checkpoint-before.json") as file:
+    before = json.load(file)["choices"][0]["text"]
+with open("/tmp/cuda-checkpoint-after.json") as file:
+    after = json.load(file)["choices"][0]["text"]
+
+print("before:", repr(before))
+print("after: ", repr(after))
+assert before == after, "deterministic completion changed after restore"
+print("PASS: inference output was preserved")
+PY
+before: ' the capital of the French Republic.\n'
+after:  ' the capital of the French Republic.\n'
+PASS: inference output was preserved
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ for cycle in 1 2 3; do
+  echo "cycle $cycle: suspend"
+  curl --fail --silent --show-error --request POST \
+    'http://localhost:8000/suspend?mode=abort'
+  curl --fail --silent --show-error http://localhost:8000/is_suspended
+
+  echo "cycle $cycle: resume"
+  curl --fail --silent --show-error --request POST \
+    http://localhost:8000/resume
+  curl --fail --silent --show-error http://localhost:8000/is_suspended
+done
+cycle 1: suspend
+{"is_suspended":true}cycle 1: resume
+{"is_suspended":false}cycle 2: suspend
+{"is_suspended":true}cycle 2: resume
+{"is_suspended":false}cycle 3: suspend
+{"is_suspended":true}cycle 3: resume
+{"is_suspended":false}(vllm) ubuntu@ip-172-31-58-228:~/vllm$ 
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --fail --silent --show-error \
+  http://localhost:8000/v1/completions \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "checkpoint-test",
+    "prompt": "The capital of France is",
+    "max_tokens": 8,
+    "temperature": 0
+  }'
+{"id":"cmpl-974b7ac72420686f","object":"text_completion","created":1785447632,"model":"checkpoint-test","choices":[{"index":0,"text":" the capital of the French Republic.\n","logprobs":null,"finish_reason":"length","stop_reason":null,"token_ids":null,"prompt_logprobs":null,"prompt_token_ids":null}],"service_tier":null,"system_fingerprint":null,"usage":{"prompt_tokens":6,"total_tokens":14,"completion_tokens":8,"prompt_tokens_details":null},"kv_transfer_params":null}(vllm) ubuntu@ip-172-31-58-228:~/vllm$ 
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --fail --silent --show-error http://localhost:8000/is_suspended
+{"is_suspended":false}(vllm) ubuntu@ip-172-31-58-228:~/vllm$ 
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --fail --silent --show-error --output /dev/null \
+  --write-out 'suspend: HTTP %{http_code}, %{time_total}s\n' \
+  --request POST 'http://localhost:8000/suspend?mode=abort'
+
+curl --fail --silent --show-error http://localhost:8000/is_suspended
+suspend: HTTP 200, 2.567187s
+{"is_suspended":true}(vllm) ubuntu@ip-172-31-58-228:~/vllm$ 
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ nvidia-smi
+Thu Jul 30 17:43:07 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L4                      Off |   00000000:35:00.0 Off |                    0 |
+| N/A   48C    P0             20W /   72W |       0MiB /  23034MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ curl --fail --silent --show-error --output /dev/null \
+  --write-out 'resume: HTTP %{http_code}, %{time_total}s\n' \
+  --request POST http://localhost:8000/resume
+
+curl --fail --silent --show-error http://localhost:8000/is_suspended
+resume: HTTP 200, 1.096000s
+{"is_suspended":false}(vllm) ubuntu@ip-172-31-58-228:~/vllm$ 
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ nvidia-smi
+Thu Jul 30 17:43:27 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L4                      Off |   00000000:35:00.0 Off |                    0 |
+| N/A   47C    P0             28W /   72W |    5898MiB /  23034MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A          861316      C   VLLM::EngineCore                       5890MiB |
++-----------------------------------------------------------------------------------------+
+(vllm) ubuntu@ip-172-31-58-228:~/vllm$ 
+
