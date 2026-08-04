@@ -27,7 +27,7 @@ The successfully tested code now lives in branch [`try-cuda-checkpoint`](https:/
 I'd be glad to work with @elizabetht to fold these changes into #37921/#37925, if she's open to it.
 
 ## Details About the Documentation
-- [procedure.md](./procedure.md) describes the procedure of the test run.
+- [procedure.md](./procedure.md) shares a reproducible procedure for anyone to wants to tryout the test run.
 - [terminal_A.txt](./terminal_A.txt) captures the unit test results and vLLM log of the test run.
 - [terminal_B.txt](./terminal_B.txt) captures the commands issued against the vLLM instance during the test run.
 
