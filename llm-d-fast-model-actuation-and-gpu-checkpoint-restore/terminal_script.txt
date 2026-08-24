@@ -1,0 +1,340 @@
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ export CONTAINER_IMG_REG=quay.io/junatibm/fma
+export IMAGE_TAG=adopt-vllm-gpucr
+export LAUNCHER_IMAGE=${CONTAINER_IMG_REG}/launcher:${IMAGE_TAG}
+export REQUESTER_IMAGE=${CONTAINER_IMG_REG}/requester:${IMAGE_TAG}
+export NS=default                                              # namespace for the demo
+export MODEL=Qwen/Qwen2.5-0.5B-Instruct                        # small enough for a 24 GiB L4
+export VLLM_PORT=8000                                          # the vLLM instance port (ISC port)
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl apply --server-side -f config/crds.yaml
+customresourcedefinition.apiextensions.k8s.io/inferenceserverconfigs.fma.llm-d.ai serverside-applied
+customresourcedefinition.apiextensions.k8s.io/launcherconfigs.fma.llm-d.ai serverside-applied
+customresourcedefinition.apiextensions.k8s.io/launcherpopulationpolicies.fma.llm-d.ai serverside-applied
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ scripts/install-fma.sh \
+  --image-tag "${IMAGE_TAG}" \
+  --oci-registry "${CONTAINER_IMG_REG}" \
+  --enable-launcher-populator false \
+  --install-crds false \
+  --install-admission-policies false \
+  --ensure-node-view-cluster-role node-viewer \
+  --chart-set global.local=false \
+  --chart-set dualPodsController.sleeperLimit=1 \
+  --chart-set dualPodsController.coverage.enabled=false
+Installing FMA from local tree and images in quay.io/junatibm/fma tagged adopt-vllm-gpucr, with
+    --namespace=default
+    --existing-node-view-cluster-role=
+    --ensure-node-view-cluster-role=node-viewer
+    --install-crds=false
+    --install-admission-policies=false
+    --enable-launcher-populator=false
+    --config-dir=config
+    --chart-instance-name=fma
+    --chart-set global.local=false
+    --chart-set dualPodsController.sleeperLimit=1
+    --chart-set dualPodsController.coverage.enabled=false
+ClusterRole node-viewer already exists and is adequate
+Release "fma" does not exist. Installing it now.
+NAME: fma
+LAST DEPLOYED: Sun Aug 23 22:06:57 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+deployment.apps/fma-dual-pods-controller condition met
+FMA successfully installed
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" get deploy -l app.kubernetes.io/name=fma-controllers
+kubectl -n "${NS}" get deploy fma-dual-pods-controller \
+  -o jsonpath='{.spec.template.spec.containers[0].image}{"\t"}{.spec.template.spec.containers[0].imagePullPolicy}{"\n"}'
+# => quay.io/junatibm/fma/dual-pods-controller:adopt-vllm-gpucr   Always
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE
+fma-dual-pods-controller   1/1     1            1           9s
+quay.io/junatibm/fma/dual-pods-controller:adopt-vllm-gpucr	Always
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl apply -n "${NS}" -f - <<EOF
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gpucr-launcher
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gpucr-launcher-pod-state-writer
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gpucr-launcher-pod-state-writer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gpucr-launcher-pod-state-writer
+subjects:
+- kind: ServiceAccount
+  name: gpucr-launcher
+---
+apiVersion: fma.llm-d.ai/v1alpha1
+kind: InferenceServerConfig
+EOF           ephemeral-storage: "8Gi"_BASE
+serviceaccount/gpucr-launcher created
+role.rbac.authorization.k8s.io/gpucr-launcher-pod-state-writer created
+rolebinding.rbac.authorization.k8s.io/gpucr-launcher-pod-state-writer created
+inferenceserverconfig.fma.llm-d.ai/gpucr-isc created
+launcherconfig.fma.llm-d.ai/gpucr-lc created
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl apply -n "${NS}" -f - <<EOF
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: gpucr-request
+  labels:
+    app: gpucr-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gpucr-example
+  template:
+    metadata:
+      labels:
+        app: gpucr-example
+      annotations:
+        dual-pods.llm-d.ai/admin-port: "8081"
+        dual-pods.llm-d.ai/inference-server-config: "gpucr-isc"
+    spec:
+      containers:
+        - name: inference-server
+          image: ${REQUESTER_IMAGE}
+          imagePullPolicy: Always
+          ports:
+          - name: probes
+            containerPort: 8080
+          - name: spi
+            containerPort: 8081
+EOF           memory: 250Miu: "1"2
+replicaset.apps/gpucr-request created
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" get pods -w \
+  -o custom-columns='NAME:.metadata.name,STATUS:.status.phase,DUAL:.metadata.labels.dual-pods\.llm-d\.ai/dual,SUSPENDED:.metadata.labels.dual-pods\.llm-d\.ai/sleeping'
+NAME                                        STATUS    DUAL                      SUSPENDED
+fma-dual-pods-controller-6cf57f86b4-x8kq5   Running   <none>                    <none>
+gpucr-request-ds6j2                         Running   launcher-gpucr-lc-rhpkx   <none>
+launcher-gpucr-lc-rhpkx                     Running   gpucr-request-ds6j2       true
+launcher-gpucr-lc-rhpkx                     Running   gpucr-request-ds6j2       true
+launcher-gpucr-lc-rhpkx                     Running   gpucr-request-ds6j2       true
+launcher-gpucr-lc-rhpkx                     Running   gpucr-request-ds6j2       false
+gpucr-request-ds6j2                         Running   launcher-gpucr-lc-rhpkx   <none>
+gpucr-request-ds6j2                         Running   launcher-gpucr-lc-rhpkx   <none>
+^C(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuationkubectl -n "${NS}" get pods -w \ \
+  -o custom-columns='NAME:.metadata.name,STATUS:.status.phase,DUAL:.metadata.labels.dual-pods\.llm-d\.ai/dual,SUSPENDED:.metadata.labels.dual-pods\.llm-d\.ai/sleeping'
+NAME                                        STATUS    DUAL                      SUSPENDED
+fma-dual-pods-controller-6cf57f86b4-x8kq5   Running   <none>                    <none>
+gpucr-request-ds6j2                         Running   launcher-gpucr-lc-rhpkx   <none>
+launcher-gpucr-lc-rhpkx                     Running   gpucr-request-ds6j2       false
+^C(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuationkubectl -n "${NS}" wait --for=condition=Ready pod -l app=gpucr-example --timeout=600s0s
+pod/gpucr-request-ds6j2 condition met
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ export LAUNCHER_POD=$(kubectl -n "${NS}" get pods \
+  -l dual-pods.llm-d.ai/launcher-config-name=gpucr-lc \
+  -o jsonpath='{.items[0].metadata.name}')
+echo "launcher pod: ${LAUNCHER_POD}"
+launcher pod: launcher-gpucr-lc-rhpkx
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" exec "${LAUNCHER_POD}" -c inference-server -- \
+  curl -s localhost:${VLLM_PORT}/v1/completions \
+  -H 'Content-Type: application/json' \
+  -d "{\"model\":\"${MODEL}\",\"prompt\":\"The capital of France is\",\"max_tokens\":16,\"temperature\":0}" \
+  | jq
+{
+  "id": "cmpl-a5fbdcdf92fb37d0",
+  "object": "text_completion",
+  "created": 1787537366,
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "choices": [
+    {
+      "index": 0,
+      "text": " Paris. It was founded in 789 AD by Charlemagne,",
+      "logprobs": null,
+      "finish_reason": "length",
+      "stop_reason": null,
+      "token_ids": null,
+      "prompt_logprobs": null,
+      "prompt_token_ids": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": null,
+  "usage": {
+    "prompt_tokens": 5,
+    "total_tokens": 21,
+    "completion_tokens": 16,
+    "prompt_tokens_details": null
+  },
+  "kv_transfer_params": null
+}
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" exec "${LAUNCHER_POD}" -c inference-server -- \
+  curl -s localhost:${VLLM_PORT}/is_suspended
+{"is_suspended":false}(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ 
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ nvidia-smi
+
+Sun Aug 23 22:09:49 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L4                      Off |   00000000:35:00.0 Off |                    0 |
+| N/A   52C    P0             35W /   72W |   19875MiB /  23034MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A           20615      C   VLLM::EngineCore                      19866MiB |
++-----------------------------------------------------------------------------------------+
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" scale rs/gpucr-request --replicas=0
+replicaset.apps/gpucr-request scaled
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" get pods -w   -o custom-columns='NAME:.metadata.name,STATUS:.status.phase,DUAL:.metadata.labels.dual-pods\.llm-d\.ai/dual,SUSPENDED:.metadata.labels.dual-pods\.llm-d\.ai/sleeping'
+NAME                                        STATUS    DUAL     SUSPENDED
+fma-dual-pods-controller-6cf57f86b4-x8kq5   Running   <none>   <none>
+launcher-gpucr-lc-rhpkx                     Running   <none>   true
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" exec "${LAUNCHER_POD}" -c inference-server -- \ \
+  curl -s localhost:${VLLM_PORT}/is_suspended
+{"is_suspended":true}(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ 
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ nvidia-smi
+Sun Aug 23 22:11:25 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L4                      Off |   00000000:35:00.0 Off |                    0 |
+| N/A   43C    P8             16W /   72W |       0MiB /  23034MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" get pod "${LAUNCHER_POD}" \
+  -o custom-columns='NAME:.metadata.name,SUSPENDED:.metadata.labels.dual-pods\.llm-d\.ai/sleeping'
+NAME                      SUSPENDED
+launcher-gpucr-lc-rhpkx   true
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" scale rs/gpucr-request --replicas=1
+kubectl -n "${NS}" wait --for=condition=Ready pod -l app=gpucr-example --timeout=600s
+replicaset.apps/gpucr-request scaled
+pod/gpucr-request-b8rvw condition met
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" get pods -w   -o custom-columns='NAME:.metadata.name,STATUS:.status.phase,DUAL:.metadata.labels.dual-pods\.llm-d\.ai/dual,SUSPENDED:.metadata.labels.dual-pods\.llm-d\.ai/sleeping'
+NAME                                        STATUS    DUAL                      SUSPENDED
+fma-dual-pods-controller-6cf57f86b4-x8kq5   Running   <none>                    <none>
+gpucr-request-b8rvw                         Running   launcher-gpucr-lc-rhpkx   <none>
+launcher-gpucr-lc-rhpkx                     Running   gpucr-request-b8rvw       false
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" exec "${LAUNCHER_POD}" -c inference-server -- \ \
+  curl -s localhost:${VLLM_PORT}/v1/completions \
+  -H 'Content-Type: application/json' \
+  -d "{\"model\":\"${MODEL}\",\"prompt\":\"The capital of France is\",\"max_tokens\":16,\"temperature\":0}" \
+  | jq
+{
+  "id": "cmpl-9c07068bd16df933",
+  "object": "text_completion",
+  "created": 1787537546,
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "choices": [
+    {
+      "index": 0,
+      "text": " Paris. It was founded in 789 AD by Charlemagne,",
+      "logprobs": null,
+      "finish_reason": "length",
+      "stop_reason": null,
+      "token_ids": null,
+      "prompt_logprobs": null,
+      "prompt_token_ids": null
+    }
+  ],
+  "service_tier": null,
+  "system_fingerprint": null,
+  "usage": {
+    "prompt_tokens": 5,
+    "total_tokens": 21,
+    "completion_tokens": 16,
+    "prompt_tokens_details": null
+  },
+  "kv_transfer_params": null
+}
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" exec "${LAUNCHER_POD}" -c inference-server -- \
+  curl -s localhost:${VLLM_PORT}/is_suspended
+{"is_suspended":false}(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ 
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ nvidia-smi
+
+Sun Aug 23 22:12:37 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L4                      Off |   00000000:35:00.0 Off |                    0 |
+| N/A   50C    P0             35W /   72W |   19874MiB /  23034MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A           20615      C   VLLM::EngineCore                      19866MiB |
++-----------------------------------------------------------------------------------------+
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" delete rs/gpucr-request
+replicaset.apps "gpucr-request" deleted
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" get pods -w   -o custom-columns='NAME:.metadata.name,STATUS:.status.phase,DUAL:.metadata.labels.dual-pods\.llm-d\.ai/dual,SUSPENDED:.metadata.labels.dual-pods\.llm-d\.ai/sleeping'
+NAME                                        STATUS    DUAL     SUSPENDED
+fma-dual-pods-controller-6cf57f86b4-x8kq5   Running   <none>   <none>
+launcher-gpucr-lc-rhpkx                     Running   <none>   true
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" exec "${LAUNCHER_POD}" -c inference-server -- \ \
+  curl -s localhost:${VLLM_PORT}/is_suspended
+{"is_suspended":true}(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ 
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ nvidia-smi
+Sun Aug 23 22:14:09 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L4                      Off |   00000000:35:00.0 Off |                    0 |
+| N/A   44C    P8             16W /   72W |       0MiB /  23034MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" delete pod ${LAUNCHER_POD}
+pod "launcher-gpucr-lc-rhpkx" deleted
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" delete inferenceserverconfig/gpucr-isc launcherconfig/gpucr-lc
+inferenceserverconfig.fma.llm-d.ai "gpucr-isc" deleted
+launcherconfig.fma.llm-d.ai "gpucr-lc" deleted
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" delete rolebinding/gpucr-launcher-pod-state-writer \
+  role/gpucr-launcher-pod-state-writer sa/gpucr-launcher
+rolebinding.rbac.authorization.k8s.io "gpucr-launcher-pod-state-writer" deleted
+role.rbac.authorization.k8s.io "gpucr-launcher-pod-state-writer" deleted
+serviceaccount "gpucr-launcher" deleted
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ helm uninstall fma
+release "fma" uninstalled
+(vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ 
