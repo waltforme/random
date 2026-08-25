@@ -1,9 +1,11 @@
 ## FMA's Adoption of vLLM-Based GPU Checkpoint/Restore
-This experiment explores how FMA (llm-d-fast-model-actuation) can adopt GPU Checkpoint/Restore technology to enable another path for fast model actuation.
+This experiment explores how [FMA](https://github.com/llm-d-incubation/llm-d-fast-model-actuation) can adopt GPU Checkpoint/Restore technology to provide another path for fast model actuation.
+
+This experiment uses work from the in-flight PRs https://github.com/vllm-project/vllm/pull/37921 and https://github.com/vllm-project/vllm/pull/37925 which aim to integrate GPU Checkpoint/Restore into vLLM. For more details, see https://github.com/waltforme/random/tree/main/vllm-cuda-checkpoint-testing.
 
 
 ### Main results
-Scale the FMA server request down to zero replicas: The FMA 'dual pods' unbind, and the launcher is 'suspended' (i.e. CUDA-checkpointed).
+Scale the FMA server request down to zero replicas: The FMA 'dual pods' unbind, and the launcher becomes 'suspended' (i.e., CUDA-checkpointed).
 ```console
 (vllm) ubuntu@ip-172-31-58-228:~/llm-d-fast-model-actuation$ kubectl -n "${NS}" scale rs/gpucr-request --replicas=0
 replicaset.apps/gpucr-request scaled
@@ -78,7 +80,7 @@ The full terminal session for the experiment is recorded in [terminal_script.txt
 
 This experiment was conducted using https://github.com/waltforme/llm-d-fast-model-actuation/tree/adopt-vllm-gpucr,
 which is an experimental branch of my FMA fork.
-The codebase:
+This branch:
 - Uses a customized launcher image that is based on my customized vLLM. For details about the customized vLLM, see https://github.com/waltforme/random/tree/main/vllm-cuda-checkpoint-testing;
-- Makes surgical changes to the dual-pods controller;
+- Makes surgical changes to the dual-pods controller to leverage the customized vLLM's CUDA checkpointing instead of the ordinary vLLM's sleep mode;
 - Provides [reproducible steps](https://github.com/waltforme/llm-d-fast-model-actuation/blob/adopt-vllm-gpucr/docs/vllm-gpu-checkpoint-restore-demo.md) for anyone who wants to try this experiment.
