@@ -76,7 +76,7 @@ launcher-gpucr-lc-rhpkx                     Running   gpucr-request-b8rvw       
 
 
 ### Details
-The full terminal session for the experiment is recorded in [terminal_script.txt](./terminal_script.txt).
+The full terminal session for the experiment is recorded in [terminal_transcript.txt](./terminal_transcript.txt).
 
 This experiment was conducted using https://github.com/waltforme/llm-d-fast-model-actuation/tree/adopt-vllm-gpucr,
 which is an experimental branch of my FMA fork.
