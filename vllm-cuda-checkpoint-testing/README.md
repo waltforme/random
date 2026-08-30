@@ -22,9 +22,7 @@ Finally, with these changes in place, I was able to successfully exercise CUDA-b
 The successfully tested code now lives in branch [`try-cuda-checkpoint`](https://github.com/waltforme/vllm/tree/try-cuda-checkpoint) of my vLLM fork, which is [6 commits ahead of](https://github.com/vllm-project/vllm/compare/main...waltforme:vllm:try-cuda-checkpoint) `main`:
 - The first 4 commits come from PRs #37921 and #37925.
 - The fifth commit merges the two PRs.
-- **The sixth commit contains the changes that switch to the CUDA Checkpointing driver's exposed API and restore the RFC's five-primitive surface.**
-
-I'd be glad to work with @elizabetht to fold these changes into #37921/#37925, if she's open to it.
+- **The sixth commit contains the changes that switch to the CUDA Checkpointing driver's exposed API and restore the RFC's five-primitive surface.** These changes were folded into #37921 via https://github.com/elizabetht/vllm/pull/1 on Aug 29, 2026. Thanks to @elizabetht !
 
 ## Details About the Documentation
 - [procedure.md](./procedure.md) shares a reproducible procedure for anyone to wants to tryout the test run.
