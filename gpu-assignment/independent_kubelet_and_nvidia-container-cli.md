@@ -152,3 +152,13 @@ As long as a valid `NVIDIA_VISIBLE_DEVICES`, which is the human-specified one he
 ## Conclusions
 - The order of the two instances of `NVIDIA_VISIBLE_DEVICES` in `ContainerConfig.Envs` matters. Only the latter is picked up by `nvidia-container-cli`.
 - Both the kubelet and the `nvidia-container-cli` can independently assign GPUs, including the 'supportive' devices.
+
+
+## Extended Reading
+It is concluded that 'Both the kubelet and the `nvidia-container-cli` can independently assign GPUs'.
+There is an interesting corner case which is [FMA](https://github.com/llm-d-incubation/llm-d-fast-model-actuation) on GKE, this case is special because:
+- For FMA's launcher pods, the device plugin is bypassed so kubelet gets no recommendations;
+- On GKE, `nvidia-container-cli`, or more broadly, nvidia-container-toolkit, is not available.
+In other words, both ways are blocked for this corner case.
+
+To get FMA deployed on GKE, someone [manually simulated](https://github.com/llm-d/llm-d/blob/e8822a9ea48d47ecc58550a59d3fc0dcba2e3688/guides/fast-model-actuation/components/gke/kustomization.yaml) the device plugin's behavior, as part of [this PR](https://github.com/llm-d/llm-d/pull/3040).
